@@ -4,121 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feature Statistics</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            max-width: 1200px;
-            width: 100%;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .group {
-            flex: 1;
-            background: #fff;
-            border-radius: 6px;
-            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            min-width: 320px; /* Ensures proper sizing */
-        }
-
-        .row {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .box {
-            flex: 1;
-            background: #fff;
-            border-radius: 6px;
-            padding: 10px;
-            text-align: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .box:hover {
-            transform: scale(1.05);
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-            background-color: #eef1f7;
-        }
-
-        .box span {
-            font-size: 14px;
-            color: #888;
-            display: block;
-        }
-
-        .box strong {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            display: block;
-            margin-top: 5px;
-        }
-
-        /* Vertical separator between groups (hidden on small screens) */
-        .separator {
-            width: 2px;
-            background: #ddd;
-            height: 90%;
-            align-self: center;
-        }
-
-        /* Media Query for Small Screens (Less than 768px) */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .separator {
-                display: none; /* Hide vertical separator on small screens */
-            }
-
-            .row {
-                flex-direction: column; /* Stack boxes vertically */
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css"> <!-- Compiled CSS from SCSS -->
 </head>
 <body>
 
-<div class="container">
+<div class="feature-management-container">
     <!-- First Group: All Features, Soft Launch, BAU -->
-    <div class="group">
-        <div class="row">
-            <div class="box">
+    <div class="feature-management-group">
+        <div class="feature-management-row">
+            <div class="feature-management-box">
                 <span>All Features</span>
                 <strong>5823</strong>
             </div>
-            <div class="box">
+            <div class="feature-management-box">
                 <span>Soft Launch</span>
                 <strong>1425</strong>
             </div>
-            <div class="box">
+            <div class="feature-management-box">
                 <span>BAU</span>
                 <strong>4418</strong>
             </div>
@@ -126,20 +28,20 @@
     </div>
 
     <!-- Vertical Separator (Hidden on Small Screens) -->
-    <div class="separator"></div>
+    <div class="feature-management-separator"></div>
 
     <!-- Second Group: Approved, Pending Approval, Created in 60 Days -->
-    <div class="group">
-        <div class="row">
-            <div class="box">
+    <div class="feature-management-group">
+        <div class="feature-management-row">
+            <div class="feature-management-box">
                 <span>Approved</span>
                 <strong>4793</strong>
             </div>
-            <div class="box">
+            <div class="feature-management-box">
                 <span>Pending Approval</span>
                 <strong>1425</strong>
             </div>
-            <div class="box">
+            <div class="feature-management-box">
                 <span>Created in 60 days</span>
                 <strong>76</strong>
             </div>
