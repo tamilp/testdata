@@ -5,6 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feature Statistics</title>
     <link rel="stylesheet" href="styles.css"> <!-- Compiled CSS from SCSS -->
+
+    <style>
+        // Define variables for easy customization
+$primary-bg: #f8f9fa;
+$box-bg: #fff;
+$hover-bg: #eef1f7;
+$border-color: #ddd;
+$text-color: #333;
+$text-muted: #888;
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: $primary-bg;
+    margin: 0;
+    padding: 20px;
+}
+
+.feature-management {
+    &-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        max-width: 1200px;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &-group {
+        flex: 1;
+        background: $box-bg;
+        border-radius: 6px;
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 320px;
+    }
+
+    &-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    &-box {
+        flex: 1;
+        background: $box-bg;
+        border-radius: 6px;
+        padding: 10px;
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        &:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+            background-color: $hover-bg;
+        }
+
+        span {
+            font-size: 14px;
+            color: $text-muted;
+            display: block;
+        }
+
+        strong {
+            font-size: 20px;
+            font-weight: bold;
+            color: $text-color;
+            display: block;
+            margin-top: 5px;
+        }
+    }
+
+    &-separator {
+        width: 2px;
+        background: $border-color;
+        height: 90%;
+        align-self: center;
+    }
+
+    /* Media Query for Small Screens (Less than 768px) */
+    @media (max-width: 768px) {
+        &-container {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        &-separator {
+            display: none; /* Hide vertical separator on small screens */
+        }
+
+        &-row {
+            flex-direction: column; /* Stack boxes vertically */
+        }
+    }
+}
+    </style>
 </head>
 <body>
 
