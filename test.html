@@ -1,168 +1,84 @@
-// Define variables for easy customization
-$primary-bg: #f8f9fa;
-$group-bg: #fff;
-$border-color: #ddd;
-$text-color: #333;
-$text-muted: #888;
-$hover-bg: #eef1f7;
+<div class="feature-management-tab-container">
+    <!-- Tab Navigation -->
+    <ul class="feature-management-tabs">
+        <li *ngFor="let tab of tabs" 
+            (click)="setActiveTab(tab.id)" 
+            [class.active]="activeTab === tab.id">
+            {{ tab.label }}
+        </li>
+    </ul>
 
-.feature-management {
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: $primary-bg;
-    margin: 0;
-    padding: 20px;
+    <!-- Tab Content -->
+    <div class="feature-management-tab-content">
+        <div *ngFor="let tab of tabs" *ngIf="activeTab === tab.id">
+            <h3>{{ tab.label }} Content</h3>
+            <p>{{ tab.content }}</p>
+        </div>
+    </div>
+</div>
 
-    .feature-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        padding: 15px;
-        border-radius: 8px;
-        max-width: 1200px;
-        width: 100%;
-        align-items: center;
-        justify-content: center;
-    }
 
-    .feature-group {
-        flex: 1;
-        background: $group-bg;
-        border-radius: 15px;
-        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
-        padding: 15px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        min-width: 320px;
-        border: 2px solid $border-color;
-    }
 
-    .feature-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 0px;
-        border: none;
-    }
+import { Component } from '@angular/core';
 
-    .feature-box {
-        flex: 1;
-        background: $group-bg;
-        padding: 10px;
-        text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        border-left: 2px solid $border-color;
+@Component({
+  selector: 'app-tabset',
+  templateUrl: './tabset.component.html',
+  styleUrls: ['./tabset.component.scss']
+})
+export class TabsetComponent {
+  tabs = [
+    { id: 'home', label: 'Home', content: 'Welcome to the home tab!' },
+    { id: 'profile', label: 'Profile', content: 'This is the profile section.' },
+    { id: 'settings', label: 'Settings', content: 'Manage your settings here.' }
+  ];
 
-        &:first-child {
-            border-left: none;
-        }
+  activeTab: string = this.tabs[0].id; // Default to first tab
 
-        &:hover {
-            transform: scale(1.05);
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-            background-color: $hover-bg;
-        }
-
-        span {
-            font-size: 14px;
-            color: $text-muted;
-            display: block;
-        }
-
-        strong {
-            font-size: 20px;
-            font-weight: bold;
-            color: $text-color;
-            display: block;
-            margin-top: 5px;
-        }
-    }
-
-    /* Vertical separator between groups (hidden on small screens) */
-    .feature-separator {
-        width: 2px;
-        background: $border-color;
-        height: 90%;
-        align-self: center;
-    }
-
-    /* Media Query for Small Screens (Less than 768px) */
-    @media (max-width: 768px) {
-        .feature-container {
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .feature-separator {
-            display: none;
-        }
-
-        .feature-row {
-            flex-direction: column;
-        }
-
-        .feature-box {
-            border-left: none;
-            border-bottom: 2px solid $border-color;
-
-            &:last-child {
-                border-bottom: none;
-            }
-        }
-    }
+  setActiveTab(tabId: string) {
+    this.activeTab = tabId;
+  }
 }
 
 
 
+.feature-management-tab-container {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+}
+
+.feature-management-tabs {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    border-bottom: 2px solid #ddd;
+
+    li {
+        padding: 10px 20px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        border-bottom: none;
+        transition: 0.3s;
+        background: #f8f8f8;
+
+        &:hover {
+            background: #ddd;
+        }
+
+        &.active {
+            background: white;
+            border: 1px solid #ddd;
+            border-bottom: 2px solid white;
+            font-weight: bold;
+        }
+    }
+}
+
+.feature-management-tab-content {
+    padding: 15px;
+    border: 1px solid #ddd;
+    background: white;
+}
 
 
-<div class="feature-management">
-    <div class="feature-container">
-        <!-- First Group: All Features, Soft Launch, BAU -->
-        <div class="feature-group">
-            <div class="feature-row">
-                <div class="feature-box">
-                    <span>All Features</span>
-                    <strong>5823</strong>
-                </div>
-                <div class="feature-box">
-                    <span>Soft Launch</span>
-                    <strong>1425</strong>
-                </div>
-                <div class="feature-box">
-                    <span>BAU</span>
-                    <strong>4418</strong>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vertical Separator (Hidden on Small Screens) -->
-        <div class="feature-separator"></div>
-
-        <!-- Second Group: Approved, Pending Approval, Created in 60 Days -->
-        <div class="feature-group">
-            <div class="feature-row">
-                <div class="feature-box">
-                    <span>Approved</span>
-                    <strong>4793</strong>
-                </div>
-                <div class="feature-box">
-                    <span>Pending Approval</span>
-                    <strong>1425</strong>
-                </div>
-                <div class="feature-box">
-                    <span>Created in 60 days</span>
-                    <strong>76</strong>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
