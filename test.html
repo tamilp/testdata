@@ -16,7 +16,7 @@ $hover-bg: #eef1f7;
     margin: 0;
     padding: 20px;
 
-    .container {
+    .feature-container {
         display: flex;
         flex-wrap: wrap;
         gap: 20px;
@@ -28,7 +28,7 @@ $hover-bg: #eef1f7;
         justify-content: center;
     }
 
-    .group {
+    .feature-group {
         flex: 1;
         background: $group-bg;
         border-radius: 15px;
@@ -42,14 +42,14 @@ $hover-bg: #eef1f7;
         border: 2px solid $border-color;
     }
 
-    .row {
+    .feature-row {
         display: flex;
         justify-content: space-between;
         gap: 0px;
         border: none;
     }
 
-    .box {
+    .feature-box {
         flex: 1;
         background: $group-bg;
         padding: 10px;
@@ -87,7 +87,7 @@ $hover-bg: #eef1f7;
     }
 
     /* Vertical separator between groups (hidden on small screens) */
-    .separator {
+    .feature-separator {
         width: 2px;
         background: $border-color;
         height: 90%;
@@ -96,20 +96,20 @@ $hover-bg: #eef1f7;
 
     /* Media Query for Small Screens (Less than 768px) */
     @media (max-width: 768px) {
-        .container {
+        .feature-container {
             flex-direction: column;
             align-items: center;
         }
 
-        .separator {
+        .feature-separator {
             display: none;
         }
 
-        .row {
+        .feature-row {
             flex-direction: column;
         }
 
-        .box {
+        .feature-box {
             border-left: none;
             border-bottom: 2px solid $border-color;
 
@@ -123,20 +123,21 @@ $hover-bg: #eef1f7;
 
 
 
+
 <div class="feature-management">
-    <div class="container">
+    <div class="feature-container">
         <!-- First Group: All Features, Soft Launch, BAU -->
-        <div class="group">
-            <div class="row">
-                <div class="box">
+        <div class="feature-group">
+            <div class="feature-row">
+                <div class="feature-box">
                     <span>All Features</span>
                     <strong>5823</strong>
                 </div>
-                <div class="box">
+                <div class="feature-box">
                     <span>Soft Launch</span>
                     <strong>1425</strong>
                 </div>
-                <div class="box">
+                <div class="feature-box">
                     <span>BAU</span>
                     <strong>4418</strong>
                 </div>
@@ -144,20 +145,20 @@ $hover-bg: #eef1f7;
         </div>
 
         <!-- Vertical Separator (Hidden on Small Screens) -->
-        <div class="separator"></div>
+        <div class="feature-separator"></div>
 
         <!-- Second Group: Approved, Pending Approval, Created in 60 Days -->
-        <div class="group">
-            <div class="row">
-                <div class="box">
+        <div class="feature-group">
+            <div class="feature-row">
+                <div class="feature-box">
                     <span>Approved</span>
                     <strong>4793</strong>
                 </div>
-                <div class="box">
+                <div class="feature-box">
                     <span>Pending Approval</span>
                     <strong>1425</strong>
                 </div>
-                <div class="box">
+                <div class="feature-box">
                     <span>Created in 60 days</span>
                     <strong>76</strong>
                 </div>
