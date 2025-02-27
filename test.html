@@ -1,84 +1,221 @@
-<div class="feature-management-tab-container">
-    <!-- Tab Navigation -->
-    <ul class="feature-management-tabs">
-        <li *ngFor="let tab of tabs" 
-            (click)="setActiveTab(tab.id)" 
-            [class.active]="activeTab === tab.id">
-            {{ tab.label }}
-        </li>
-    </ul>
+import { Component, OnInit } from '@angular/core';
 
-    <!-- Tab Content -->
-    <div class="feature-management-tab-content">
-        <div *ngFor="let tab of tabs" *ngIf="activeTab === tab.id">
-            <h3>{{ tab.label }} Content</h3>
-            <p>{{ tab.content }}</p>
-        </div>
-    </div>
-</div>
-
-
-
-import { Component } from '@angular/core';
+interface Feature {
+  name: string;
+  displayName: string;
+  creationDate: string;
+  status: string;
+  enabled: boolean;
+  type: string;
+  excludedCasUserIdCount: number;
+  casUserIdCount: string;
+  clientPartyIdCount: string;
+  excludedClientPartyIdCount: number;
+  artOwner: string;
+  launchType: string;
+}
 
 @Component({
-  selector: 'app-tabset',
-  templateUrl: './tabset.component.html',
-  styleUrls: ['./tabset.component.scss']
+  selector: 'app-features',
+  templateUrl: './features.component.html',
+  styleUrls: ['./features.component.css']
 })
-export class TabsetComponent {
-  tabs = [
-    { id: 'home', label: 'Home', content: 'Welcome to the home tab!' },
-    { id: 'profile', label: 'Profile', content: 'This is the profile section.' },
-    { id: 'settings', label: 'Settings', content: 'Manage your settings here.' }
-  ];
+export class FeaturesComponent implements OnInit {
+  features: Feature[] = [];
+  currentPage: number = 1;
+  pageSize: number = 2; // Display 2 items per page for demo purposes
+  totalPages: number = 0;
+  totalElements: number = 0;
 
-  activeTab: string = this.tabs[0].id; // Default to first tab
+  mockResponse = {
+    content: [
+      {
+        name: '1_12_PYIN_PLEFT',
+        displayName: '1_12 Pymt Init PL EFT',
+        creationDate: '2021-06-22T06:53:29.648Z',
+        status: 'REJECTED',
+        enabled: true,
+        type: 'features',
+        excludedCasUserIdCount: 0,
+        casUserIdCount: '137',
+        clientPartyIdCount: '12',
+        excludedClientPartyIdCount: 2,
+        artOwner: 'Global',
+        launchType: 'Soft Launch'
+      },
+      {
+        name: '2_24_PYIN_PRIGHT',
+        displayName: '2_24 Pymt Init PR EFT',
+        creationDate: '2022-01-15T10:20:18.123Z',
+        status: 'APPROVED',
+        enabled: false,
+        type: 'features',
+        excludedCasUserIdCount: 5,
+        casUserIdCount: '200',
+        clientPartyIdCount: '50',
+        excludedClientPartyIdCount: 1,
+        artOwner: 'Regional',
+        launchType: 'Full Launch'
+      },
+      {
+        name: '3_36_PAY_COMPLETE',
+        displayName: '3_36 Payment Complete',
+        creationDate: '2023-05-10T12:45:30.789Z',
+        status: 'PENDING',
+        enabled: true,
+        type: 'features',
+        excludedCasUserIdCount: 10,
+        casUserIdCount: '95',
+        clientPartyIdCount: '20',
+        excludedClientPartyIdCount: 0,
+        artOwner: 'Local',
+        launchType: 'Beta Test'
+      },
+      {
+        name: '4_48_REFUND_PROCESS',
+        displayName: '4_48 Refund Process',
+        creationDate: '2021-11-08T08:10:45.654Z',
+        status: 'IN_PROGRESS',
+        enabled: false,
+        type: 'features',
+        excludedCasUserIdCount: 3,
+        casUserIdCount: '180',
+        clientPartyIdCount: '60',
+        excludedClientPartyIdCount: 2,
+        artOwner: 'Enterprise',
+        launchType: 'Soft Launch'
+      },
+      {
+        name: '5_60_ACCOUNT_SETUP',
+        displayName: '5_60 Account Setup',
+        creationDate: '2024-02-01T15:30:00.321Z',
+        status: 'APPROVED',
+        enabled: true,
+        type: 'features',
+        excludedCasUserIdCount: 1,
+        casUserIdCount: '120',
+        clientPartyIdCount: '35',
+        excludedClientPartyIdCount: 5,
+        artOwner: 'Global',
+        launchType: 'General Availability'
+      }
+    ],
+    page: {
+      number: 0,
+      size: 10,
+      totalElements: 5,
+      totalPages: 3
+    }
+  };
 
-  setActiveTab(tabId: string) {
-    this.activeTab = tabId;
+  ngOnInit() {
+    this.fetchMockFeatures();
+  }
+
+  fetchMockFeatures() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.features = this.mockResponse.content.slice(startIndex, endIndex);
+    this.totalPages = Math.ceil(this.mockResponse.page.totalElements / this.pageSize);
+    this.totalElements = this.mockResponse.page.totalElements;
+  }
+
+  changePage(newPage: number) {
+    if (newPage > 0 && newPage <= this.totalPages) {
+      this.currentPage = newPage;
+      this.fetchMockFeatures();
+    }
   }
 }
 
 
 
-.feature-management-tab-container {
-    width: 100%;
-    max-width: 600px;
-    margin: auto;
+
+
+        <div class="features-container">
+  <h2>Feature List</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Display Name</th>
+        <th>Status</th>
+        <th>Launch Type</th>
+        <th>Creation Date</th>
+        <th>Enabled</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let feature of features">
+        <td>{{ feature.name }}</td>
+        <td>{{ feature.displayName }}</td>
+        <td>{{ feature.status }}</td>
+        <td>{{ feature.launchType }}</td>
+        <td>{{ feature.creationDate | date:'short' }}</td>
+        <td>{{ feature.enabled ? 'Yes' : 'No' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination Controls -->
+  <div class="pagination">
+    <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+      Previous
+    </button>
+    <span>Page {{ currentPage }} of {{ totalPages }}</span>
+    <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+      Next
+    </button>
+  </div>
+</div>
+
+
+
+
+
+        .features-container {
+  width: 80%;
+  margin: auto;
+  text-align: center;
 }
 
-.feature-management-tabs {
-    display: flex;
-    list-style: none;
-    padding: 0;
-    border-bottom: 2px solid #ddd;
-
-    li {
-        padding: 10px 20px;
-        cursor: pointer;
-        border: 1px solid transparent;
-        border-bottom: none;
-        transition: 0.3s;
-        background: #f8f8f8;
-
-        &:hover {
-            background: #ddd;
-        }
-
-        &.active {
-            background: white;
-            border: 1px solid #ddd;
-            border-bottom: 2px solid white;
-            font-weight: bold;
-        }
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
 }
 
-.feature-management-tab-content {
-    padding: 15px;
-    border: 1px solid #ddd;
-    background: white;
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.pagination {
+  margin-top: 20px;
+}
+
+button {
+  padding: 8px 12px;
+  margin: 0 5px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 
