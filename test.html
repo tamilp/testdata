@@ -1,77 +1,62 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+mkdir express-pagination && cd express-pagination
+npm init -y
+npm install express cors body-parser
 
-interface Feature {
-  name: string;
-  displayName: string;
-  creationDate: string;
-  status: string;
-  enabled: boolean;
-  type: string;
-  excludedCasUserIdCount: number;
-  casUserIdCount: string;
-  clientPartyIdCount: string;
-  excludedClientPartyIdCount: number;
-  artOwner: string;
-  launchType: string;
-}
 
-interface ApiResponse {
-  content: Feature[];
-  page: {
-    number: number;
-    size: number;
-    totalElements: number;
-    totalPages: number;
-  };
-}
 
-@Component({
-  selector: 'app-features',
-  templateUrl: './features.component.html',
-  styleUrls: ['./features.component.css']
-})
-export class FeaturesComponent implements OnInit {
-  features: Feature[] = [];
-  currentPage: number = 1;
-  pageSize: number = 10;
-  totalPages: number = 0;
-  totalElements: number = 0;
-  apiUrl: string = 'https://your-api-endpoint.com/features'; // Replace with actual backend API URL
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
-  constructor(private http: HttpClient) {}
+const app = express();
+const PORT = 5000;
 
-  ngOnInit() {
-    this.fetchFeatures();
-  }
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
 
-  fetchFeatures() {
-    const payload = {
-      featureName: 'Mega menu',
-      launchType: 'softLaunchFeatures',
-      page: this.currentPage,
-      size: this.pageSize
-    };
+// Mock Data (28 Features)
+const mockData = Array.from({ length: 28 }, (_, i) => ({
+  name: `Feature_${i + 1}`,
+  displayName: `Feature Display ${i + 1}`,
+  creationDate: new Date(),
+  status: ['APPROVED', 'PENDING', 'REJECTED'][i % 3],
+  enabled: i % 2 === 0,
+  type: 'features',
+  excludedCasUserIdCount: 0,
+  casUserIdCount: '100',
+  clientPartyIdCount: '10',
+  excludedClientPartyIdCount: 0,
+  artOwner: 'Global',
+  launchType: 'Soft Launch'
+}));
 
-    this.http.post<ApiResponse>(this.apiUrl, payload).subscribe(
-      (response) => {
-        this.features = response.content;
-        this.totalPages = response.page.totalPages;
-        this.totalElements = response.page.totalElements;
-      },
-      (error) => {
-        console.error('Error fetching features:', error);
-      }
-    );
-  }
+// API: Get paginated features
+app.post('/features', (req, res) => {
+  const { page, size } = req.body;
+  const pageNumber = parseInt(page) || 1;
+  const pageSize = parseInt(size) || 10;
 
-  changePage(newPage: number) {
-    if (newPage > 0 && newPage <= this.totalPages) {
-      this.currentPage = newPage;
-      this.fetchFeatures(); // Fetch data on page change
+  const totalElements = mockData.length;
+  const totalPages = Math.ceil(totalElements / pageSize);
+
+  const startIndex = (pageNumber - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedData = mockData.slice(startIndex, endIndex);
+
+  res.json({
+    content: paginatedData,
+    page: {
+      number: pageNumber,
+      size: pageSize,
+      totalElements,
+      totalPages
     }
-  }
-}
+  });
+});
+
+// Start server
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 
 
 
@@ -80,105 +65,17 @@ export class FeaturesComponent implements OnInit {
 
 
 
-      <div class="features-container">
-  <h2>Feature List</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Display Name</th>
-        <th>Status</th>
-        <th>Launch Type</th>
-        <th>Creation Date</th>
-        <th>Enabled</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let feature of features">
-        <td>{{ feature.name }}</td>
-        <td>{{ feature.displayName }}</td>
-        <td>{{ feature.status }}</td>
-        <td>{{ feature.launchType }}</td>
-        <td>{{ feature.creationDate | date:'short' }}</td>
-        <td>{{ feature.enabled ? 'Yes' : 'No' }}</td>
-      </tr>
-    </tbody>
-  </table>
 
-  <!-- Custom Pagination -->
-  <div class="pagination-container">
-    <span>{{ (currentPage - 1) * pageSize + 1 }} - 
-      {{ currentPage * pageSize > totalElements ? totalElements : currentPage * pageSize }} 
-      of {{ totalElements }} cases
-    </span>
-
-    <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">❮</button>
-
-    <button *ngFor="let page of [].constructor(totalPages); let i = index"
-            (click)="changePage(i + 1)" 
-            [class.active]="currentPage === i + 1">
-      {{ i + 1 }}
-    </button>
-
-    <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">❯</button>
-  </div>
-</div>
+node server.js
 
 
 
-.features-container {
-  width: 80%;
-  margin: auto;
-  text-align: center;
-}
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
 
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
+curl -X POST http://localhost:5000/features -H "Content-Type: application/json" -d '{"page":1,"size":10}'
 
-th {
-  background-color: #007bff;
-  color: white;
-}
 
-tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
 
-/* Pagination Styling */
-.pagination-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 20px;
-  gap: 10px;
-  font-size: 14px;
-}
-
-.pagination-container button {
-  padding: 5px 10px;
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.pagination-container button.active {
-  background-color: #007bff;
-  color: white;
-  border-radius: 5px;
-}
-
-.pagination-container button:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-}
+private apiUrl = 'http://localhost:5000/features'; // Use the new backend URL
 
 
