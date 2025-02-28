@@ -1,81 +1,124 @@
-mkdir express-pagination && cd express-pagination
-npm init -y
-npm install express cors body-parser
+<div *ngIf="features.length > 0">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Display Name</th>
+        <th>Status</th>
+        <th>Enabled</th>
+        <th>Launch Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let feature of features">
+        <td>{{ feature.name }}</td>
+        <td>{{ feature.displayName }}</td>
+        <td>{{ feature.status }}</td>
+        <td>{{ feature.enabled ? 'Yes' : 'No' }}</td>
+        <td>{{ feature.launchType }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <span>
+      {{ currentPage * pageSize + 1 }} - 
+      {{ (currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize }} 
+      of {{ totalElements }} cases
+    </span>
+
+    <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0">‹</button>
+
+    <!-- First page -->
+    <button (click)="changePage(0)" [class.active]="currentPage === 0">1</button>
+
+    <!-- Show "..." when skipping pages -->
+    <span *ngIf="currentPage > 3">...</span>
+
+    <!-- Middle pages dynamically -->
+    <button *ngFor="let page of getPageNumbers()" 
+            (click)="changePage(page)" 
+            [class.active]="currentPage === page">
+      {{ page + 1 }}
+    </button>
+
+    <!-- Show "..." before last page -->
+    <span *ngIf="currentPage < totalPages - 4">...</span>
+
+    <!-- Last page -->
+    <button (click)="changePage(totalPages - 1)" [class.active]="currentPage === totalPages - 1">
+      {{ totalPages }}
+    </button>
+
+    <button (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">›</button>
+  </div>
+</div>
 
 
 
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
 
-const app = express();
-const PORT = 5000;
+import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
+@Component({
+  selector: 'app-feature',
+  templateUrl: './feature.component.html',
+  styleUrls: ['./feature.component.css']
+})
+export class FeatureComponent implements OnInit {
+  features: any[] = [];
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalElements: number = 0;
+  totalPages: number = 0;
+  apiUrl = 'http://localhost:5000/features'; // Update with your API URL
 
-// Mock Data (28 Features)
-const mockData = Array.from({ length: 28 }, (_, i) => ({
-  name: `Feature_${i + 1}`,
-  displayName: `Feature Display ${i + 1}`,
-  creationDate: new Date(),
-  status: ['APPROVED', 'PENDING', 'REJECTED'][i % 3],
-  enabled: i % 2 === 0,
-  type: 'features',
-  excludedCasUserIdCount: 0,
-  casUserIdCount: '100',
-  clientPartyIdCount: '10',
-  excludedClientPartyIdCount: 0,
-  artOwner: 'Global',
-  launchType: 'Soft Launch'
-}));
+  constructor(private http: HttpClient) {}
 
-// API: Get paginated features
-app.post('/features', (req, res) => {
-  const { page, size } = req.body;
-  const pageNumber = parseInt(page) || 1;
-  const pageSize = parseInt(size) || 10;
+  ngOnInit(): void {
+    this.fetchFeatures();
+  }
 
-  const totalElements = mockData.length;
-  const totalPages = Math.ceil(totalElements / pageSize);
+  fetchFeatures(): void {
+    const requestBody = {
+      page: this.currentPage,
+      size: this.pageSize
+    };
 
-  const startIndex = (pageNumber - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedData = mockData.slice(startIndex, endIndex);
+    this.http.post<any>(this.apiUrl, requestBody).subscribe(response => {
+      this.features = response.content;
+      this.totalElements = response.page.totalElements;
+      this.totalPages = response.page.totalPages;
+    });
+  }
 
-  res.json({
-    content: paginatedData,
-    page: {
-      number: pageNumber,
-      size: pageSize,
-      totalElements,
-      totalPages
+  changePage(newPage: number): void {
+    if (newPage >= 0 && newPage < this.totalPages) {
+      this.currentPage = newPage;
+      this.fetchFeatures();
     }
-  });
-});
+  }
 
-// Start server
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
 
+    if (this.totalPages <= 7) {
+      // Show all pages if total pages are small
+      for (let i = 1; i < this.totalPages - 1; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first two, last two, and 3 around the current page
+      if (this.currentPage <= 3) {
+        pages.push(1, 2, 3);
+      } else if (this.currentPage >= this.totalPages - 4) {
+        pages.push(this.totalPages - 4, this.totalPages - 3, this.totalPages - 2);
+      } else {
+        pages.push(this.currentPage - 1, this.currentPage, this.currentPage + 1);
+      }
+    }
 
-
-
-
-
-
-
-
-node server.js
-
-
-
-
-
-curl -X POST http://localhost:5000/features -H "Content-Type: application/json" -d '{"page":1,"size":10}'
-
-
-
-private apiUrl = 'http://localhost:5000/features'; // Use the new backend URL
-
-
+    return pages;
+  }
+}
