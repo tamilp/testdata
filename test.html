@@ -33,7 +33,6 @@
     <!-- First page -->
     <button (click)="changePage(0)" [class.active]="currentPage === 0">1</button>
 
-    <!-- Show "..." when skipping pages -->
     <span *ngIf="currentPage > 3">...</span>
 
     <!-- Middle pages dynamically -->
@@ -43,7 +42,6 @@
       {{ page + 1 }}
     </button>
 
-    <!-- Show "..." before last page -->
     <span *ngIf="currentPage < totalPages - 4">...</span>
 
     <!-- Last page -->
@@ -52,9 +50,15 @@
     </button>
 
     <button (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">›</button>
+
+    <!-- Go to Page Input -->
+    <input type="number" [(ngModel)]="goToPageNumber" 
+           (keyup.enter)="jumpToPage()"
+           min="1" [max]="totalPages"
+           placeholder="Go to page" />
+    <button (click)="jumpToPage()">Go</button>
   </div>
 </div>
-
 
 
 
@@ -72,6 +76,7 @@ export class FeatureComponent implements OnInit {
   pageSize: number = 10;
   totalElements: number = 0;
   totalPages: number = 0;
+  goToPageNumber: number | null = null;
   apiUrl = 'http://localhost:5000/features'; // Update with your API URL
 
   constructor(private http: HttpClient) {}
@@ -100,6 +105,13 @@ export class FeatureComponent implements OnInit {
     }
   }
 
+  jumpToPage(): void {
+    if (this.goToPageNumber && this.goToPageNumber > 0 && this.goToPageNumber <= this.totalPages) {
+      this.changePage(this.goToPageNumber - 1);
+      this.goToPageNumber = null; // Reset input after navigating
+    }
+  }
+
   getPageNumbers(): number[] {
     const pages: number[] = [];
 
@@ -122,3 +134,61 @@ export class FeatureComponent implements OnInit {
     return pages;
   }
 }
+
+
+
+        table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background-color: #f4f4f4;
+}
+
+/* Pagination */
+.pagination {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination button {
+  padding: 5px 10px;
+  border: none;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.pagination button.active {
+  background: #0056b3;
+}
+
+.pagination button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  padding: 5px;
+  font-size: 14px;
+}
+
+/* Input Box */
+.pagination input {
+  width: 80px;
+  padding: 5px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
