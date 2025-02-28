@@ -1,5 +1,71 @@
-this.transformedFeatures = response.map((item, index) => ({
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, catchError, throwError } from 'rxjs';
+
+export interface Feature {
+  artName: string;
+  artCode: string;
+  visibleFlag: boolean;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FeatureService {
+  private apiUrl = 'http://localhost:5000/features'; // Replace with actual API
+
+  private featureSubject = new BehaviorSubject<any[]>([]); // Stores transformed features
+
+  constructor(private http: HttpClient) {}
+
+  // Expose transformed features as Observable
+  get transformedFeatures$(): Observable<any[]> {
+    return this.featureSubject.asObservable();
+  }
+
+  // Fetch and transform data
+  fetchAndTransformData(): void {
+    this.http.get<Feature[]>(this.apiUrl).pipe(
+      catchError(error => {
+        console.error('API Error:', error);
+        return throwError(() => new Error('Failed to fetch data'));
+      })
+    ).subscribe(response => {
+      const transformed = response
+        .filter(item => item.visibleFlag) // Only keep visible items
+        .map((item, index) => ({
           id: index + 1,
           name: item.artName,
           value: item.artCode
         }));
+
+      this.featureSubject.next(transformed); // Update BehaviorSubject
+    });
+  }
+}
+
+
+
+
+
+              import { Component, OnInit } from '@angular/core';
+import { FeatureService } from '../services/feature.service';
+
+@Component({
+  selector: 'app-feature',
+  templateUrl: './feature.component.html',
+  styleUrls: ['./feature.component.css']
+})
+export class FeatureComponent implements OnInit {
+  constructor(private featureService: FeatureService) {}
+
+  // Use async pipe, no need for manual subscriptions
+  get transformedFeatures$() {
+    return this.featureService.transformedFeatures$;
+  }
+
+  ngOnInit(): void {
+    this.featureService.fetchAndTransformData(); // Fetch data on load
+  }
+}
+
