@@ -1,80 +1,101 @@
-/* feature-management-tab.component.css */
+/* Base Styles */
 .feature-management-tab {
   display: flex;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
-}
-
-.feature-management-tab__nav-button {
-  flex: 0 0 auto;
-  background-color: #f1f1f1;
-  border: none;
+  background: #f8f9fa;
   padding: 10px;
-  cursor: pointer;
+  border-radius: 10px;
 }
 
+/* Navigation Buttons */
+.feature-management-tab__nav-button {
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: transform 0.2s ease-in-out;
+  border-radius: 50%;
+}
+
+.feature-management-tab__nav-button:hover {
+  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Scroll Container */
 .feature-management-tab__scroll-container {
-  flex: 1 1 auto;
+  flex: 1;
   overflow-x: auto;
-  overflow-y: hidden;
   white-space: nowrap;
+  scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
+  scrollbar-color: #007bff #e0e0e0;
+  border-radius: 10px;
 }
 
-.feature-management-tab__list {
-  display: inline-flex;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.feature-management-tab__item {
-  flex: 0 0 auto;
-  padding: 10px 20px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.feature-management-tab__item--active {
-  background-color: #007bff;
-  color: #fff;
-}
-
-.feature-management-tab__content {
-  padding: 20px;
-  border-top: 1px solid #ddd;
-}
-
-.feature-management-tab__panel {
-  /* Additional styling for tab panels */
-}
-
-/* Custom Scrollbar Styling for WebKit Browsers */
+/* Hide scrollbar but keep functionality */
 .feature-management-tab__scroll-container::-webkit-scrollbar {
   height: 8px;
 }
 
 .feature-management-tab__scroll-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.feature-management-tab__scroll-container::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #e0e0e0;
   border-radius: 4px;
 }
 
+.feature-management-tab__scroll-container::-webkit-scrollbar-thumb {
+  background: #007bff;
+  border-radius: 10px;
+  transition: background 0.3s ease-in-out;
+}
+
 .feature-management-tab__scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #0056b3;
 }
 
-
-/* feature-management-tab.component.css */
-.feature-management-tab__scroll-container {
-  flex: 1 1 auto;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  scroll-behavior: smooth; /* Enables smooth scrolling */
+/* Tabs List */
+.feature-management-tab__list {
+  display: flex;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
+/* Tab Items */
+.feature-management-tab__item {
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  border-radius: 5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+.feature-management-tab__item:hover {
+  background: #007bff;
+  color: #fff;
+  transform: translateY(-3px);
+}
+
+/* Active Tab */
+.feature-management-tab__item--active {
+  background: #007bff;
+  color: white;
+  box-shadow: 0px 5px 10px rgba(0, 123, 255, 0.3);
+}
+
+/* Content Section */
+.feature-management-tab__content {
+  padding: 20px;
+  margin-top: 10px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
