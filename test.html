@@ -1,121 +1,22 @@
-/* Base Styles */
-.feature-management-tab {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 12px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    width: 90%;
-    max-width: 800px;
-    position: relative;
-    overflow: hidden;
-}
+scrollTabs(direction: 'left' | 'right'): void {
+    const tabListEl = this.tabList.nativeElement;
+    const scrollAmount = 150;
+    
+    if (direction === 'left') {
+      tabListEl.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    } else {
+      tabListEl.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }
 
-/* Navigation Buttons */
-.feature-management-tab__nav-button {
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    border: none;
-    color: white;
-    padding: 10px;
-    cursor: pointer;
-    font-size: 20px;
-    transition: all 0.3s ease-in-out;
-    border-radius: 50%;
-    outline: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    opacity: 0.9;
-    box-shadow: 0 3px 6px rgba(0, 123, 255, 0.4);
-}
-
-/* Positioning */
-.feature-management-tab__nav-button.left {
-    left: 5px;
-}
-
-.feature-management-tab__nav-button.right {
-    right: 5px;
-}
-
-/* Hover Effect */
-.feature-management-tab__nav-button:hover {
-    background: linear-gradient(135deg, #0056b3, #004494);
-    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.5);
-    transform: translateY(-50%) scale(1.1);
-}
-
-/* Click Effect */
-.feature-management-tab__nav-button:active {
-    transform: translateY(-50%) scale(0.95);
-}
-
-/* Scrollable Tab List */
-.feature-management-tab__scroll-container {
-    flex: 1;
-    overflow-x: auto;
-    white-space: nowrap;
-    scroll-behavior: smooth;
-    border-radius: 12px;
-    padding: 0 40px;
-}
-
-/* Hide scrollbar */
-.feature-management-tab__scroll-container::-webkit-scrollbar {
-    display: none;
-}
-
-/* Tab List */
-.feature-management-tab__list {
-    display: flex;
-    gap: 10px;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-/* Tab Items */
-.feature-management-tab__item {
-    padding: 12px 20px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    background: white;
-    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-}
-
-.feature-management-tab__item:hover {
-    background: #007bff;
-    color: #fff;
-    transform: translateY(-3px);
-}
-
-/* Active Tab */
-.feature-management-tab__item.active {
-    background: #007bff;
-    color: white;
-    box-shadow: 0 5px 10px rgba(0, 123, 255, 0.3);
-}
-
-/* Content Section */
-.feature-management-tab__content {
-    padding: 20px;
-    margin-top: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    width: 80%;
-    max-width: 800px;
-    text-align: center;
-    font-size: 18px;
-}
+  private scrollToActiveTab(): void {
+    const tabListEl = this.tabList.nativeElement;
+    const activeTabEl = tabListEl.querySelector('.active');
+    
+    if (activeTabEl) {
+      tabListEl.scrollTo({
+        left: activeTabEl.offsetLeft - tabListEl.clientWidth / 2 + activeTabEl.clientWidth / 2,
+        behavior: 'smooth'
+      });
+    }
+  }
