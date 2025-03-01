@@ -1,71 +1,174 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, throwError } from 'rxjs';
-
-export interface Feature {
-  artName: string;
-  artCode: string;
-  visibleFlag: boolean;
-}
-
-@Injectable({
-  providedIn: 'root'
-})
-export class FeatureService {
-  private apiUrl = 'http://localhost:5000/features'; // Replace with actual API
-
-  private featureSubject = new BehaviorSubject<any[]>([]); // Stores transformed features
-
-  constructor(private http: HttpClient) {}
-
-  // Expose transformed features as Observable
-  get transformedFeatures$(): Observable<any[]> {
-    return this.featureSubject.asObservable();
-  }
-
-  // Fetch and transform data
-  fetchAndTransformData(): void {
-    this.http.get<Feature[]>(this.apiUrl).pipe(
-      catchError(error => {
-        console.error('API Error:', error);
-        return throwError(() => new Error('Failed to fetch data'));
-      })
-    ).subscribe(response => {
-      const transformed = response
-        .filter(item => item.visibleFlag) // Only keep visible items
-        .map((item, index) => ({
-          id: index + 1,
-          name: item.artName,
-          value: item.artCode
-        }));
-
-      this.featureSubject.next(transformed); // Update BehaviorSubject
-    });
-  }
-}
-
-
-
-
-
-              import { Component, OnInit } from '@angular/core';
-import { FeatureService } from '../services/feature.service';
+// feature-management-tab.component.ts
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { TabService, Tab } from './tab.service';
 
 @Component({
-  selector: 'app-feature',
-  templateUrl: './feature.component.html',
-  styleUrls: ['./feature.component.css']
+  selector: 'app-feature-management-tab',
+  templateUrl: './feature-management-tab.component.html',
+  styleUrls: ['./feature-management-tab.component.css'],
 })
-export class FeatureComponent implements OnInit {
-  constructor(private featureService: FeatureService) {}
+export class FeatureManagementTabComponent implements OnInit, AfterViewInit {
+  tabs: Tab[] = [];
+  activeTab: string | null = null;
+  @ViewChild('tabList', { read: ElementRef }) tabList!: ElementRef;
 
-  // Use async pipe, no need for manual subscriptions
-  get transformedFeatures$() {
-    return this.featureService.transformedFeatures$;
+  constructor(private tabService: TabService) {}
+
+  ngOnInit() {
+    this.tabService.getTabs().subscribe((data) => {
+      this.tabs = data;
+      if (this.tabs.length > 0) {
+        this.activeTab = this.tabs[0].id; // Set the first tab as active
+      }
+    });
   }
 
-  ngOnInit(): void {
-    this.featureService.fetchAndTransformData(); // Fetch data on load
+  ngAfterViewInit() {
+    // Optionally, scroll to the active tab on load
+    this.scrollToActiveTab();
   }
+
+  setActiveTab(tabId: string): void {
+    this.activeTab = tabId;
+    this.scrollToActiveTab();
+  }
+
+  scrollTabs(direction: 'left' | 'right'): void {
+    const tabListEl = this.tabList.nativeElement;
+    const scrollAmount = 100; // Adjust based on desired scroll distance
+    if (direction === 'left') {
+      tabListEl.scrollLeft -= scrollAmount;
+    } else {
+      tabListEl.scrollLeft += scrollAmount;
+    }
+  }
+
+  private scrollToActiveTab(): void {
+    const tabListEl = this.tabList.nativeElement;
+    const activeTabEl = tabListEl.querySelector('.feature-management-tab__item--active');
+    if (activeTabEl) {
+      const activeTabOffsetLeft = activeTabEl.offsetLeft;
+      const activeTabWidth = activeTabEl.offsetWidth;
+      const tabListScrollLeft = tabListEl.scrollLeft;
+      const tabListWidth = tabListEl.clientWidth;
+
+      if (
+        activeTabOffsetLeft < tabListScrollLeft ||
+        activeTabOffsetLeft + activeTabWidth >
+          tabListScrollLeft + tabListWidth
+      ) {
+        tabListEl.scrollLeft =
+          activeTabOffsetLeft + activeTabWidth / 2 - tabListWidth / 2;
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+          <!-- feature-management-tab.component.html -->
+<div class="feature-management-tab">
+  <!-- Navigation Button: Scroll Left -->
+  <button
+    class="feature-management-tab__nav-button"
+    (click)="scrollTabs('left')"
+  >
+    &#9664;
+  </button>
+
+  <!-- Tab List -->
+  <ul class="feature-management-tab__list" #tabList>
+    <li
+      *ngFor="let tab of tabs"
+      class="feature-management-tab__item"
+      [class.feature-management-tab__item--active]="activeTab === tab.id"
+      (click)="setActiveTab(tab.id)"
+    >
+      {{ tab.label }}
+    </li>
+  </ul>
+
+  <!-- Navigation Button: Scroll Right -->
+  <button
+    class="feature-management-tab__nav-button"
+    (click)="scrollTabs('right')"
+  >
+    &#9654;
+  </button>
+</div>
+
+<!-- Tab Content -->
+<div class="feature-management-tab__content">
+  <div
+    *ngFor="let tab of tabs"
+    class="feature-management-tab__panel"
+    [hidden]="activeTab !== tab.id"
+  >
+    <h3>{{ tab.label }} Content</h3>
+    <p>{{ tab.content }}</p>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+          /* feature-management-tab.component.css */
+.feature-management-tab {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.feature-management-tab__nav-button {
+  flex: 0 0 auto;
+  background-color: #f1f1f1;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.feature-management-tab__list {
+  display: flex;
+  flex: 1 1 auto;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+}
+
+.feature-management-tab__item {
+  flex: 0 0 auto;
+  padding: 10px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.feature-management-tab__item--active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.feature-management-tab__content {
+  padding: 20px;
+  border-top: 1px solid #ddd;
+}
+
+.feature-management-tab__panel {
+  /* Additional styling for tab panels */
 }
 
