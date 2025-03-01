@@ -1,22 +1,97 @@
-scrollTabs(direction: 'left' | 'right'): void {
-    const tabListEl = this.tabList.nativeElement;
-    const scrollAmount = 150;
-    
-    if (direction === 'left') {
-      tabListEl.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-    } else {
-      tabListEl.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  }
+/* Tabs Container */
+.feature-management-tab {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 12px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    position: relative;
+    overflow: hidden;
+}
 
-  private scrollToActiveTab(): void {
-    const tabListEl = this.tabList.nativeElement;
-    const activeTabEl = tabListEl.querySelector('.active');
-    
-    if (activeTabEl) {
-      tabListEl.scrollTo({
-        left: activeTabEl.offsetLeft - tabListEl.clientWidth / 2 + activeTabEl.clientWidth / 2,
-        behavior: 'smooth'
-      });
-    }
-  }
+/* Navigation Buttons */
+.feature-management-tab__nav-button {
+    background: #007bff;
+    border: none;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    border-radius: 50%;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+/* Positioning */
+.feature-management-tab__nav-button.left {
+    left: 5px;
+}
+
+.feature-management-tab__nav-button.right {
+    right: 5px;
+}
+
+/* Scrollable Tab List */
+.feature-management-tab__scroll-container {
+    flex: 1;
+    overflow-x: auto;
+    white-space: nowrap;
+    scroll-behavior: auto;
+    border-radius: 12px;
+    padding: 0 40px;
+}
+
+/* Hide scrollbar */
+.feature-management-tab__scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* Tab List */
+.feature-management-tab__list {
+    display: flex;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Tab Items */
+.feature-management-tab__item {
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid #ccc;
+}
+
+/* Active Tab */
+.feature-management-tab__item.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* Content Section */
+.feature-management-tab__content {
+    padding: 20px;
+    margin-top: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    width: 80%;
+    max-width: 800px;
+    text-align: center;
+    font-size: 18px;
+}
