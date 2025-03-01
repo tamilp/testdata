@@ -1,113 +1,48 @@
-/* Tabs Container */
-.feature-management-tab {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 12px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 800px;
-    position: relative;
-    overflow: hidden;
+private scrollToActiveTab(): void {
+    if (!this.tabList) return;
+
+    const tabListEl = this.tabList.nativeElement;
+    const activeTabEl = tabListEl.querySelector('.active');
+
+    if (activeTabEl) {
+        const newScrollLeft =
+            activeTabEl.offsetLeft - tabListEl.clientWidth / 2 + activeTabEl.clientWidth / 2;
+        
+        // Prevent excessive scrolling by checking if already in position
+        if (Math.abs(tabListEl.scrollLeft - newScrollLeft) > 5) {
+            tabListEl.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
+        }
+    }
 }
 
-/* Navigation Buttons */
-.feature-management-tab__nav-button {
-    background: #007bff;
-    border: none;
-    color: white;
-    padding: 10px;
-    cursor: pointer;
-    font-size: 20px;
-    border-radius: 50%;
-    outline: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
+
+
+
+scrollTabs(direction: 'left' | 'right'): void {
+    if (!this.tabList) return;
+
+    const tabListEl = this.tabList.nativeElement;
+    const scrollAmount = 150;
+
+    const maxScrollLeft = tabListEl.scrollWidth - tabListEl.clientWidth;
+    let newScrollLeft = direction === 'left' 
+        ? tabListEl.scrollLeft - scrollAmount 
+        : tabListEl.scrollLeft + scrollAmount;
+
+    // Prevent scrolling beyond limits
+    newScrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft));
+
+    tabListEl.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
 }
 
-/* Hover Effect */
-.feature-management-tab__nav-button:hover {
-    background: #0056b3;
-}
 
-/* Active Click Effect */
-.feature-management-tab__nav-button:active {
-    background: #004494;
-}
 
-/* Positioning */
-.feature-management-tab__nav-button.left {
-    left: 5px;
-}
 
-.feature-management-tab__nav-button.right {
-    right: 5px;
-}
+import { Component, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 
-/* Scrollable Tab List */
-.feature-management-tab__scroll-container {
-    flex: 1;
-    overflow-x: auto;
-    white-space: nowrap;
-    scroll-behavior: auto;
-    border-radius: 12px;
-    padding: 0 40px;
-}
+constructor(private cdr: ChangeDetectorRef) {}
 
-/* Hide scrollbar */
-.feature-management-tab__scroll-container::-webkit-scrollbar {
-    display: none;
-}
-
-/* Tab List */
-.feature-management-tab__list {
-    display: flex;
-    gap: 10px;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-/* Tab Items */
-.feature-management-tab__item {
-    padding: 12px 20px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-    border-radius: 8px;
-    background: white;
-    border: 1px solid #ccc;
-}
-
-/* Hover Effect */
-.feature-management-tab__item:hover {
-    background: #007bff;
-    color: white;
-}
-
-/* Active Tab */
-.feature-management-tab__item.active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-/* Content Section */
-.feature-management-tab__content {
-    padding: 20px;
-    margin-top: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 10px;
-    width: 80%;
-    max-width: 800px;
-    text-align: center;
-    font-size: 18px;
+ngAfterViewInit() {
+    this.scrollToActiveTab();
+    this.cdr.detach(); // Stops Angular from re-checking this component unnecessarily
 }
