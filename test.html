@@ -1,48 +1,18 @@
-private scrollToActiveTab(): void {
-    if (!this.tabList) return;
-
-    const tabListEl = this.tabList.nativeElement;
-    const activeTabEl = tabListEl.querySelector('.active');
-
-    if (activeTabEl) {
-        const newScrollLeft =
-            activeTabEl.offsetLeft - tabListEl.clientWidth / 2 + activeTabEl.clientWidth / 2;
-        
-        // Prevent excessive scrolling by checking if already in position
-        if (Math.abs(tabListEl.scrollLeft - newScrollLeft) > 5) {
-            tabListEl.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
-        }
-    }
-}
-
-
-
-
 scrollTabs(direction: 'left' | 'right'): void {
     if (!this.tabList) return;
 
     const tabListEl = this.tabList.nativeElement;
-    const scrollAmount = 150;
+    const scrollAmount = 200; // Adjust as needed
 
-    const maxScrollLeft = tabListEl.scrollWidth - tabListEl.clientWidth;
-    let newScrollLeft = direction === 'left' 
-        ? tabListEl.scrollLeft - scrollAmount 
-        : tabListEl.scrollLeft + scrollAmount;
+    tabListEl.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount });
+  }
 
-    // Prevent scrolling beyond limits
-    newScrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft));
+  private scrollToActiveTab(): void {
+    if (!this.tabList) return;
 
-    tabListEl.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
-}
-
-
-
-
-import { Component, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
-
-constructor(private cdr: ChangeDetectorRef) {}
-
-ngAfterViewInit() {
-    this.scrollToActiveTab();
-    this.cdr.detach(); // Stops Angular from re-checking this component unnecessarily
-}
+    const activeTabEl = this.tabList.nativeElement.querySelector('.active');
+    
+    if (activeTabEl) {
+        activeTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+    }
+  }
