@@ -1,48 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Filter UI</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container" style="margin-top: 20px;">
-        <div class="form-inline">
-            <label class="control-label"><strong>Filter:</strong></label>
-            
-            <select class="form-control" style="width: 150px;">
-                <option selected>Option 1</option>
-                <option>Option 2</option>
-                <option>Option 3</option>
-            </select>
-            
-            <select class="form-control" style="width: 150px;">
-                <option selected>Option 1</option>
-                <option>Option 2</option>
-                <option>Option 3</option>
-            </select>
-            
-            <select class="form-control" style="width: 150px;">
-                <option selected>Option 1</option>
-                <option>Option 2</option>
-                <option>Option 3</option>
-            </select>
-            
-            <select class="form-control" style="width: 150px;">
-                <option selected>Option 1</option>
-                <option>Option 2</option>
-                <option>Option 3</option>
-            </select>
-            
-            <input type="text" class="form-control" placeholder="Enter text" style="width: 150px;">
-            <input type="text" class="form-control" placeholder="Enter text" style="width: 150px;">
-            
-            <button class="btn btn-primary">Apply Filter</button>
-            <button class="btn btn-default">Reset Filter</button>
-        </div>
-    </div>
+const artCollection = [
+    { artCode: "A001", artName: "Sunset Painting", visibility: true },
+    { artCode: "A002", artName: "Modern Sculpture", visibility: false },
+    { artCode: "A003", artName: "Abstract Art", visibility: true },
+    { artCode: "A004", artName: "Vintage Poster", visibility: false },
+    { artCode: "A005", artName: "Landscape Canvas", visibility: true },
+    { artCode: "A006", artName: "City Skyline", visibility: true },
+    { artCode: "A007", artName: "Ocean Waves", visibility: false },
+    { artCode: "A008", artName: "Portrait Sketch", visibility: true },
+    { artCode: "A009", artName: "Graffiti Wall", visibility: false },
+    { artCode: "A010", artName: "Wildlife Photography", visibility: true },
+    { artCode: "A011", artName: "Classic Architecture", visibility: false },
+    { artCode: "A012", artName: "Floral Design", visibility: true },
+    { artCode: "A013", artName: "Cubist Composition", visibility: true },
+    { artCode: "A014", artName: "Minimalist Drawing", visibility: false },
+    { artCode: "A015", artName: "Fantasy Illustration", visibility: true }
+];
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-</body>
-</html>
+// Function to reorder
+const reorderArtCollection = (collection) => {
+    const priorityItems = collection.filter(item => item.artCode === "A009" || item.artCode === "A013");
+    const remainingItems = collection.filter(item => item.artCode !== "A009" && item.artCode !== "A013");
+    return [...priorityItems, ...remainingItems];
+};
+
+const sortedArtCollection = reorderArtCollection(artCollection);
+console.log(sortedArtCollection);
