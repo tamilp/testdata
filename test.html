@@ -1,27 +1,11 @@
-const artCollection = [
-    { artCode: "A001", artName: "Sunset Painting", visibility: true },
-    { artCode: "A002", artName: "Modern Sculpture", visibility: false },
-    { artCode: "A003", artName: "Abstract Art", visibility: true },
-    { artCode: "A004", artName: "Vintage Poster", visibility: false },
-    { artCode: "A005", artName: "Landscape Canvas", visibility: true },
-    { artCode: "A006", artName: "City Skyline", visibility: true },
-    { artCode: "A007", artName: "Ocean Waves", visibility: false },
-    { artCode: "A008", artName: "Portrait Sketch", visibility: true },
-    { artCode: "A009", artName: "Graffiti Wall", visibility: false },
-    { artCode: "A010", artName: "Wildlife Photography", visibility: true },
-    { artCode: "A011", artName: "Classic Architecture", visibility: false },
-    { artCode: "A012", artName: "Floral Design", visibility: true },
-    { artCode: "A013", artName: "Cubist Composition", visibility: true },
-    { artCode: "A014", artName: "Minimalist Drawing", visibility: false },
-    { artCode: "A015", artName: "Fantasy Illustration", visibility: true }
-];
+function toCamelCase(str) {
+  return str
+    .toLowerCase() // Convert everything to lowercase
+    .split('_')    // Split by underscore
+    .map((word, index) => 
+      index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+    ) // Capitalize first letter of each word except the first one
+    .join(''); // Join words back
+}
 
-// Function to reorder
-const reorderArtCollection = (collection) => {
-    const priorityItems = collection.filter(item => item.artCode === "A009" || item.artCode === "A013");
-    const remainingItems = collection.filter(item => item.artCode !== "A009" && item.artCode !== "A013");
-    return [...priorityItems, ...remainingItems];
-};
-
-const sortedArtCollection = reorderArtCollection(artCollection);
-console.log(sortedArtCollection);
+console.log(toCamelCase("TEST_TESTING")); // Output: "testTesting"
