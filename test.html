@@ -1,25 +1,16 @@
-import { Component } from "@angular/core";
-import { debounceTime, Subject } from "rxjs";
+<h1 #firstElement tabindex="-1">Welcome to Home Page</h1>
+
+import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 
 @Component({
-  selector: "app-search",
-  templateUrl: "./search.component.html",
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss']
 })
-export class SearchComponent {
-  private searchSubject = new Subject<string>();
+export class HomeComponent implements AfterViewInit {
+  @ViewChild('firstElement', { static: true }) firstElement!: ElementRef;
 
-  constructor() {
-    this.searchSubject.pipe(debounceTime(500)).subscribe((query) => {
-      this.search(query);
-    });
-  }
-
-  debouncedSearch(event: Event) {
-    const query = (event.target as HTMLInputElement).value;
-    this.searchSubject.next(query);
-  }
-
-  search(query: string) {
-    console.log("Searching for:", query);
+  ngAfterViewInit(): void {
+    setTimeout(() => this.firstElement.nativeElement.focus(), 0);
   }
 }
