@@ -1,4 +1,66 @@
-buttons.forEach((button, index) => {
-      (button as HTMLElement).setAttribute('data-index', index.toString()); // Set attribute
-      (button as HTMLElement).style.backgroundColor = 'blue'; // Set style
-    });
+<!-- Close Button (Top Right) -->
+<button #closeButton class="close-btn">Close</button>
+
+<!-- Search Input -->
+<input type="text" [(ngModel)]="searchTerm" (input)="filterCards()" placeholder="Search..." aria-label="Search messages" />
+
+<!-- Card List -->
+<div *ngFor="let card of filteredCards; let i = index" 
+     class="card" 
+     tabindex="0" 
+     #cardElement 
+     (keydown)="handleKeyDown($event, i)">
+  <h3>{{ card.title }}</h3>
+  <p>{{ card.description }}</p>
+</div>
+
+
+
+import { Component, ViewChildren, ViewChild, ElementRef, QueryList, AfterViewChecked } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+})
+export class AppComponent implements AfterViewChecked {
+  searchTerm = '';
+  cards = [
+    { title: 'Angular', description: 'Framework for building web apps' },
+    { title: 'React', description: 'JavaScript library for UI development' },
+    { title: 'Vue', description: 'Progressive JavaScript framework' },
+    { title: 'Svelte', description: 'Cybernetically enhanced web apps' },
+  ];
+  filteredCards = [...this.cards];
+
+  @ViewChildren('cardElement') cardElements!: QueryList<ElementRef>;
+  @ViewChild('closeButton') closeButton!: ElementRef;
+  focusNeeded = false;
+
+  filterCards() {
+    this.filteredCards = this.cards.filter((card) =>
+      card.title.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+    this.focusNeeded = true;
+  }
+
+  ngAfterViewChecked() {
+    if (this.focusNeeded && this.cardElements.length > 0) {
+      this.cardElements.first.nativeElement.focus();
+      this.focusNeeded = false;
+    }
+  }
+
+  handleKeyDown(event: KeyboardEvent, index: number) {
+    if (event.key === 'ArrowDown') {
+      const nextElement = this.cardElements.get(index + 1);
+      if (nextElement) {
+        nextElement.nativeElement.focus();
+      } else {
+        this.closeButton.nativeElement.focus(); // Move to Close button if last card
+      }
+    }
+    if (event.key === 'ArrowUp' && index > 0) {
+      this.cardElements.get(index - 1)?.nativeElement.focus();
+    }
+  }
+}
