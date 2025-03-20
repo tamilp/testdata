@@ -1,29 +1,4 @@
-<h1 #firstElement tabindex="-1">Welcome to Home Page</h1>
-
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-
-@Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
-})
-export class HomeComponent implements AfterViewInit {
-  @ViewChild('firstElement', { static: true }) firstElement!: ElementRef;
-
-  ngAfterViewInit(): void {
-    setTimeout(() => this.firstElement.nativeElement.focus(), 0);
-  }
-}
-
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap; /* Prevent wrapping */
-  border: 0;
-}
+buttons.forEach((button, index) => {
+      (button as HTMLElement).setAttribute('data-index', index.toString()); // Set attribute
+      (button as HTMLElement).style.backgroundColor = 'blue'; // Set style
+    });
