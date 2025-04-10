@@ -1,17 +1,30 @@
-
-function reverseArray(arr) {
-  let start = 0;
-  let end = arr.length - 1;
-
-  while (start < end) {
-    // Swap
-    [arr[start], arr[end]] = [arr[end], arr[start]];
-    start++;
-    end--;
+function findMaxMin(arr) {
+  // Edge case: if the array is empty, return null for both max and min
+  if (arr.length === 0) {
+    return { max: null, min: null };
   }
 
-  return arr;
+  // Initialize max and min to the first element of the array
+  let max = arr[0];
+  let min = arr[0];
+
+  // Iterate through the array starting from the second element
+  for (let i = 1; i < arr.length; i++) {
+    // Update max if current element is greater than max
+    if (arr[i] > max) {
+      max = arr[i];
+    }
+    // Update min if current element is smaller than min
+    if (arr[i] < min) {
+      min = arr[i];
+    }
+  }
+
+  // Return an object with max and min
+  return { max, min };
 }
 
-let arr = [1, 2, 3, 4, 5];
-console.log(reverseArray(arr)); // Output: [5, 4, 3, 2, 1]
+// Example usage
+const arr = [4, 7, 1, 9, 2, 6];
+const result = findMaxMin(arr);
+console.log(`Max: ${result.max}, Min: ${result.min}`);
