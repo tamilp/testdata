@@ -1,5 +1,17 @@
-const divElement = document.querySelector('#myDiv') as HTMLElement;
-  if (divElement) {
-    const attrValue = divElement.getAttribute('data-custom'); // Read 'data-custom' attribute
-    console.log('Attribute Value:', attrValue);
+
+function reverseArray(arr) {
+  let start = 0;
+  let end = arr.length - 1;
+
+  while (start < end) {
+    // Swap
+    [arr[start], arr[end]] = [arr[end], arr[start]];
+    start++;
+    end--;
   }
+
+  return arr;
+}
+
+let arr = [1, 2, 3, 4, 5];
+console.log(reverseArray(arr)); // Output: [5, 4, 3, 2, 1]
