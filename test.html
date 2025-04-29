@@ -1,8 +1,12 @@
-<div ngbDropdown class="d-inline-block">
-  <button class="btn btn-primary" ngbDropdownToggle>Toggle Dropdown</button>
-  <div ngbDropdownMenu>
-    <button ngbDropdownItem>Action 1</button>
-    <button ngbDropdownItem>Action 2</button>
-    <button ngbDropdownItem>Another Action</button>
-  </div>
-</div>
+client: {
+  jasmine: {
+    // Full list of available options:
+    random: false,           // Disable test random execution order
+    seed: '12345',           // Set a specific seed for deterministic order
+    stopOnSpecFailure: true, // Stop running after the first spec failure
+    stopSpecOnExpectationFailure: true, // Stop an individual spec after the first failed expectation
+    failFast: true,          // Alias for stopOnSpecFailure (added in Jasmine 4+)
+    timeoutInterval: 5000    // Custom timeout for async specs (in milliseconds)
+  },
+  clearContext: false // Keep Jasmine output visible in the browser
+}
