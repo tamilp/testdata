@@ -1,12 +1,45 @@
-client: {
-  jasmine: {
-    // Full list of available options:
-    random: false,           // Disable test random execution order
-    seed: '12345',           // Set a specific seed for deterministic order
-    stopOnSpecFailure: true, // Stop running after the first spec failure
-    stopSpecOnExpectationFailure: true, // Stop an individual spec after the first failed expectation
-    failFast: true,          // Alias for stopOnSpecFailure (added in Jasmine 4+)
-    timeoutInterval: 5000    // Custom timeout for async specs (in milliseconds)
-  },
-  clearContext: false // Keep Jasmine output visible in the browser
+<div>
+  <h3>Enter only _, -, and space</h3>
+  <input
+    type="text"
+    [(ngModel)]="inputValue"
+    (input)="validateInput()"
+    placeholder="_ - space only"
+    class="input-box"
+  />
+  <div class="error" *ngIf="showError">
+    ❌ Only _, -, and spaces are allowed.
+  </div>
+</div>
+
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-custom-input',
+  templateUrl: './custom-input.component.html',
+  styleUrls: ['./custom-input.component.css']
+})
+export class CustomInputComponent {
+  inputValue: string = '';
+  showError: boolean = false;
+
+  validateInput() {
+    const allowedPattern = /^[-_ ]*$/;
+    this.showError = !allowedPattern.test(this.inputValue);
+  }
 }
+
+
+.input-box {
+  width: 300px;
+  padding: 8px;
+  font-size: 16px;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
