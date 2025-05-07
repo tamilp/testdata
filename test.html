@@ -25,7 +25,7 @@ export class CustomInputComponent {
   showError: boolean = false;
 
   validateInput() {
-    const allowedPattern = /^[-_ ]*$/;
+    const allowedPattern = /^[a-zA-Z0-9 _-]*$/;
     this.showError = !allowedPattern.test(this.inputValue);
   }
 }
