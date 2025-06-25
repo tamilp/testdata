@@ -1,93 +1,21 @@
-ContextualHelpUiComponent (Child A)
-ts
-Copy
-Edit
-@Output() hovered = new EventEmitter<boolean>();
-@Input() isHovered = false;
-html
-Copy
-Edit
-<button class="contextual-help-button"
-        (mouseenter)="hovered.emit(true)"
-        (mouseleave)="hovered.emit(false)"
-        [ngClass]="{ 'animate': isHovered }">
-  Help
-</button>
-css
-Copy
-Edit
-.contextual-help-button {
-  transition: transform 0.3s ease;
-}
-.contextual-help-button.animate {
-  transform: translateX(5px);
+hoverState = false;
+
+@ViewChild(ChatUiComponent) chat!: ChatUiComponent;
+@ViewChild(ContextualHelpUiComponent) help!: ContextualHelpUiComponent;
+
+onHoverChanged(state: boolean) {
+  this.hoverState = state;
+  this.chat.isHovered = state;
+  this.help.isHovered = state;
 }
 
 
+<app-contexual-help-ui
+  [isHovered]="hoverState"
+  (hovered)="onHoverChanged($event)">
+</app-contexual-help-ui>
 
-   ChatUiComponent (Child B)
-ts
-Copy
-Edit
-@Output() hovered = new EventEmitter<boolean>();
-@Input() isHovered = false;
-html
-Copy
-Edit
-<button class="chat-button"
-        (mouseenter)="hovered.emit(true)"
-        (mouseleave)="hovered.emit(false)"
-        [ngClass]="{ 'animate': isHovered }">
-  Chat
-</button>
-css
-Copy
-Edit
-.chat-button {
-  transition: transform 0.3s ease;
-}
-.chat-button.animate {
-  transform: translateX(5px);
-}
-
-
-
-
-
- ChatContextualHelpUiComponent (Parent)
-a. Component class:
-ts
-Copy
-Edit
-import { Component, ViewChild, ViewContainerRef, ComponentRef, AfterViewInit } from '@angular/core';
-import { ContextualHelpUiComponent } from './contextual-help-ui.component';
-import { ChatUiComponent } from './chat-ui.component';
-
-@Component({
-  selector: 'app-chat-contextual-help-ui',
-  template: `<ng-container #container></ng-container>`
-})
-export class ChatContextualHelpUiComponent implements AfterViewInit {
-  @ViewChild('container', { read: ViewContainerRef }) container!: ViewContainerRef;
-
-  helpRef!: ComponentRef<ContextualHelpUiComponent>;
-  chatRef!: ComponentRef<ChatUiComponent>;
-
-  isHovered = false;
-
-  ngAfterViewInit() {
-    // Create contextual help UI
-    this.helpRef = this.container.createComponent(ContextualHelpUiComponent);
-    this.helpRef.instance.hovered.subscribe((hover: boolean) => this.updateHoverState(hover));
-
-    // Create chat UI
-    this.chatRef = this.container.createComponent(ChatUiComponent);
-    this.chatRef.instance.hovered.subscribe((hover: boolean) => this.updateHoverState(hover));
-  }
-
-  updateHoverState(state: boolean) {
-    this.isHovered = state;
-    this.helpRef.instance.isHovered = state;
-    this.chatRef.instance.isHovered = state;
-  }
-}
+<app-chat-ui
+  [isHovered]="hoverState"
+  (hovered)="onHoverChanged($event)">
+</app-chat-ui>
