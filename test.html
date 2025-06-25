@@ -1,45 +1,93 @@
-<div>
-  <h3>Enter only _, -, and space</h3>
-  <input
-    type="text"
-    [(ngModel)]="inputValue"
-    (input)="validateInput()"
-    placeholder="_ - space only"
-    class="input-box"
-  />
-  <div class="error" *ngIf="showError">
-    ❌ Only _, -, and spaces are allowed.
-  </div>
-</div>
+ContextualHelpUiComponent (Child A)
+ts
+Copy
+Edit
+@Output() hovered = new EventEmitter<boolean>();
+@Input() isHovered = false;
+html
+Copy
+Edit
+<button class="contextual-help-button"
+        (mouseenter)="hovered.emit(true)"
+        (mouseleave)="hovered.emit(false)"
+        [ngClass]="{ 'animate': isHovered }">
+  Help
+</button>
+css
+Copy
+Edit
+.contextual-help-button {
+  transition: transform 0.3s ease;
+}
+.contextual-help-button.animate {
+  transform: translateX(5px);
+}
 
 
-import { Component } from '@angular/core';
+
+   ChatUiComponent (Child B)
+ts
+Copy
+Edit
+@Output() hovered = new EventEmitter<boolean>();
+@Input() isHovered = false;
+html
+Copy
+Edit
+<button class="chat-button"
+        (mouseenter)="hovered.emit(true)"
+        (mouseleave)="hovered.emit(false)"
+        [ngClass]="{ 'animate': isHovered }">
+  Chat
+</button>
+css
+Copy
+Edit
+.chat-button {
+  transition: transform 0.3s ease;
+}
+.chat-button.animate {
+  transform: translateX(5px);
+}
+
+
+
+
+
+ ChatContextualHelpUiComponent (Parent)
+a. Component class:
+ts
+Copy
+Edit
+import { Component, ViewChild, ViewContainerRef, ComponentRef, AfterViewInit } from '@angular/core';
+import { ContextualHelpUiComponent } from './contextual-help-ui.component';
+import { ChatUiComponent } from './chat-ui.component';
 
 @Component({
-  selector: 'app-custom-input',
-  templateUrl: './custom-input.component.html',
-  styleUrls: ['./custom-input.component.css']
+  selector: 'app-chat-contextual-help-ui',
+  template: `<ng-container #container></ng-container>`
 })
-export class CustomInputComponent {
-  inputValue: string = '';
-  showError: boolean = false;
+export class ChatContextualHelpUiComponent implements AfterViewInit {
+  @ViewChild('container', { read: ViewContainerRef }) container!: ViewContainerRef;
 
-  validateInput() {
-    const allowedPattern = /^[a-zA-Z0-9 _-]*$/;
-    this.showError = !allowedPattern.test(this.inputValue);
+  helpRef!: ComponentRef<ContextualHelpUiComponent>;
+  chatRef!: ComponentRef<ChatUiComponent>;
+
+  isHovered = false;
+
+  ngAfterViewInit() {
+    // Create contextual help UI
+    this.helpRef = this.container.createComponent(ContextualHelpUiComponent);
+    this.helpRef.instance.hovered.subscribe((hover: boolean) => this.updateHoverState(hover));
+
+    // Create chat UI
+    this.chatRef = this.container.createComponent(ChatUiComponent);
+    this.chatRef.instance.hovered.subscribe((hover: boolean) => this.updateHoverState(hover));
+  }
+
+  updateHoverState(state: boolean) {
+    this.isHovered = state;
+    this.helpRef.instance.isHovered = state;
+    this.chatRef.instance.isHovered = state;
   }
 }
-
-
-.input-box {
-  width: 300px;
-  padding: 8px;
-  font-size: 16px;
-}
-
-.error {
-  color: red;
-  font-size: 14px;
-  margin-top: 5px;
-}
-
