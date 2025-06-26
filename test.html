@@ -1,21 +1,5 @@
-hoverState = false;
-
-@ViewChild(ChatUiComponent) chat!: ChatUiComponent;
-@ViewChild(ContextualHelpUiComponent) help!: ContextualHelpUiComponent;
-
-onHoverChanged(state: boolean) {
-  this.hoverState = state;
-  this.chat.isHovered = state;
-  this.help.isHovered = state;
-}
-
-
-<app-contexual-help-ui
-  [isHovered]="hoverState"
-  (hovered)="onHoverChanged($event)">
-</app-contexual-help-ui>
-
-<app-chat-ui
-  [isHovered]="hoverState"
-  (hovered)="onHoverChanged($event)">
-</app-chat-ui>
+ngDoCheck() {
+    if (this.btnRef && this.btnRef.instance.isHovered !== this.isHovered) {
+      this.btnRef.instance.isHovered = this.isHovered;
+    }
+  }
