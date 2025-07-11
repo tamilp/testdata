@@ -1,18 +1,28 @@
-// Adjust this selector to match your actual component tag
+// Replace 'my-component' with your actual custom element tag
 const host = document.querySelector('my-component');
 
-// Access shadow DOM
+// If shadowRoot is open
 const shadowRoot = host.shadowRoot;
 
-// Get the button
+// Select your fixed button inside the shadow DOM
 const button = shadowRoot.querySelector('.fixed-button');
 
-// Get bounding rect and viewport height
-const rect = button.getBoundingClientRect();
-const viewportCenter = window.innerHeight / 2;
-const buttonCenter = rect.top + rect.height / 2;
+if (button) {
+  const rect = button.getBoundingClientRect();
+  const viewportCenterY = window.innerHeight / 2;
+  const buttonCenterY = rect.top + rect.height / 2;
 
-// Check if vertically centered (within ±2px)
-const isCentered = Math.abs(buttonCenter - viewportCenter) < 2;
+  const diff = Math.round(buttonCenterY - viewportCenterY);
 
-console.log("Is button vertically centered on the right?", isCentered);
+  console.log("Button vertical center Y:", Math.round(buttonCenterY));
+  console.log("Viewport center Y:", Math.round(viewportCenterY));
+  console.log("➡️ Difference from vertical center:", diff + "px");
+
+  if (Math.abs(diff) <= 2) {
+    console.log("✅ Button is centered (within ±2px tolerance)");
+  } else {
+    console.log("❌ Button is off-center by", diff, "px");
+  }
+} else {
+  console.warn("Button not found inside the shadow DOM.");
+}
