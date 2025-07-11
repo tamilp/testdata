@@ -1,6 +1,18 @@
-const btn = document.querySelector('.fixed-button');
-const rect = btn.getBoundingClientRect();
-const viewportHeight = window.innerHeight;
-const isVerticallyCentered = Math.abs((rect.top + rect.height / 2) - (viewportHeight / 2)) < 2;
+// Adjust this selector to match your actual component tag
+const host = document.querySelector('my-component');
 
-console.log("Is button vertically centered on the right?", isVerticallyCentered);
+// Access shadow DOM
+const shadowRoot = host.shadowRoot;
+
+// Get the button
+const button = shadowRoot.querySelector('.fixed-button');
+
+// Get bounding rect and viewport height
+const rect = button.getBoundingClientRect();
+const viewportCenter = window.innerHeight / 2;
+const buttonCenter = rect.top + rect.height / 2;
+
+// Check if vertically centered (within ±2px)
+const isCentered = Math.abs(buttonCenter - viewportCenter) < 2;
+
+console.log("Is button vertically centered on the right?", isCentered);
