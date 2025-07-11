@@ -1,5 +1,6 @@
-ngDoCheck() {
-    if (this.btnRef && this.btnRef.instance.isHovered !== this.isHovered) {
-      this.btnRef.instance.isHovered = this.isHovered;
-    }
-  }
+const btn = document.querySelector('.fixed-button');
+const rect = btn.getBoundingClientRect();
+const viewportHeight = window.innerHeight;
+const isVerticallyCentered = Math.abs((rect.top + rect.height / 2) - (viewportHeight / 2)) < 2;
+
+console.log("Is button vertically centered on the right?", isVerticallyCentered);
