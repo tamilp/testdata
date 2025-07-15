@@ -67,3 +67,26 @@ app-contexual-help-ui.component.ts (in Repo 1)
 
 Contextual Help Button animates on hover of the Chat Button.
 
+
+
+Approach
+To enable synchronized animation between the Chat and Need Help buttons across federated Angular modules, the following approach is followed:
+
+1. Create a Common Wrapper Component in ng-digital-servicing-ui
+A component named chat-contextual-help-ui.component.ts is created to wrap both buttons.
+
+This component serves as the shared parent, handling shared logic and interactions.
+
+It loads app-chat-ui and app-contextual-help-ui dynamically using module federation.
+
+2. Shared Hover State via Parent Component using @Input() and @Output()
+Both button components emit a hovered event via @Output().
+
+The wrapper component listens to these events and updates a shared hoverState variable.
+
+This hoverState is passed as an @Input() to both buttons, ensuring:
+
+Hovering over one button causes both buttons to animate simultaneously.
+
+This enables a synchronized interaction experience, regardless of which button is hovered.
+
