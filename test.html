@@ -1,96 +1,27 @@
-                  ┌──────────────────────────────────────────────┐
-                  │         NG Digital Servicing UI Repo         │
-                  │               (Host/Shell App)               │
-                  └──────────────────────────────────────────────┘
-                                          │
-                                          │
-            ┌──────────────────────────────────────────────────────────────┐
-            │                                                              │
-            ▼                                                              ▼
+// MFE1 - sender
+const key = 'myKey';
+const value = 'NewValue';
 
-┌──────────────────────────────┐                     ┌────────────────────────────────┐
-│ Contextual Help Component    │                     │ Chat UI Component              │
-│ (`app-contextual-help`)      │                     │ (`app-chat-ui`)                │
-│                              │                     │                                │
-│ Imports MF:                  │                     │ Imports MF:                    │
-│  ➤ ContextualHelpComponent  │                     │  ➤ NgDigitalEntryComponent    │
-│     (from Repo 1)            │                     │     (from Repo 2)              │
-└────────────┬─────────────────┘                     └────────────┬───────────────────┘
-             │                                                    │
-             ▼                                                    ▼
+sessionStorage.setItem(key, value);
 
-┌──────────────────────────────────────┐        ┌──────────────────────────────────────┐
-│ Repo 1: Contextual Help UI Repo      │        │ Repo 2: Chat UI Repo                 │
-│ Component: app-contexual-help-ui     │        │ Component: ng-digital-ui-entry       │
-│ Button: <button class="...">         │        │ Component: <pega-chat>               │
-│ Emits hover event → @Output()        │        │ Button inside: <button class="...">  │
-└──────────────┬───────────────────────┘        └──────────────┬───────────────────────┘
-               │                                               │
-               ▼                                               ▼
-    @Output('hovered') emits to Shell                @Output('hovered') emits to Shell
-    Shell receives event and                         Shell receives event and 
-    passes @Input('isHovered') → Chat UI             passes @Input('isHovered') → Contextual Help UI
+window.dispatchEvent(new CustomEvent('session-storage-change', {
+  detail: { key, value }
+}));
 
 
+// MFE2 - receiver (e.g., inside ngOnInit)
+ngOnInit(): void {
+  window.addEventListener('session-storage-change', this.handleStorageUpdate);
+}
 
-  Flow Explanation (on Hover)
-When Hovering on Contextual Help Button (Repo 1):
+ngOnDestroy(): void {
+  window.removeEventListener('session-storage-change', this.handleStorageUpdate);
+}
 
-app-contexual-help-ui.component.ts emits hover event.
-
-contextual-help.component.ts (in Shell) captures it and sets isHovered.
-
-isHovered is passed via @Input() to chat-ui.component.ts.
-
-chat-ui.component.ts forwards isHovered to ng-digital-ui-entry.component.ts.
-
-Chat button (inside <pega-chat>) animates.
-
-
-
-
-  When Hovering on the Chat Button (Repo 2):
-chat-icon.component.ts (in Repo 2)
-→ Emits a hover event when the user hovers on the Chat button inside <pega-chat>.
-
-ng-digital-ui-entry.component.ts
-→ Captures the emitted event and passes it upward using @Output().
-
-chat-ui.component.ts (in Shell - ng-digital-servicing-ui repo)
-→ Receives the hovered event and updates a shared variable isHovered.
-
-contextual-help.component.ts (also in Shell)
-→ Receives the updated isHovered via @Input() binding.
-
-app-contexual-help-ui.component.ts (in Repo 1)
-→ Accepts isHovered input and applies it to the Contextual Help Button.
-
-Contextual Help Button animates on hover of the Chat Button.
-
-  Remove vertical spacing between buttons.
-
-On hover of either Chat or Need Help button, both buttons should animate.
-
-
-
-Approach
-To enable synchronized animation between the Chat and Need Help buttons across federated Angular modules, the following approach is followed:
-
-1. Create a Common Wrapper Component in ng-digital-servicing-ui
-A component named chat-contextual-help-ui.component.ts is created to wrap both buttons.
-
-This component serves as the shared parent, handling shared logic and interactions.
-
-It loads app-chat-ui and app-contextual-help-ui dynamically using module federation.
-
-2. Shared Hover State via Parent Component using @Input() and @Output()
-Both button components emit a hovered event via @Output().
-
-The wrapper component listens to these events and updates a shared hoverState variable.
-
-This hoverState is passed as an @Input() to both buttons, ensuring:
-
-Hovering over one button causes both buttons to animate simultaneously.
-
-This enables a synchronized interaction experience, regardless of which button is hovered.
-
+handleStorageUpdate = (event: any) => {
+  const { key, value } = event.detail;
+  if (key === 'myKey') {
+    // Take any action needed, like updating local state or triggering UI changes
+    console.log('Detected sessionStorage change from MFE1:', value);
+  }
+};
