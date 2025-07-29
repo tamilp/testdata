@@ -1,27 +1,34 @@
-// MFE1 - sender
-const key = 'myKey';
-const value = 'NewValue';
+const fs = require('fs');
+const PDFDocument = require('pdfkit');
 
-sessionStorage.setItem(key, value);
+/**
+ * Generate a dummy PDF file of specified size.
+ * @param {string} outputPath - Output file name (e.g., 'dummy_10mb.pdf')
+ * @param {number} sizeMB - Target size in megabytes (e.g., 10)
+ */
+function createDummyPDF(outputPath, sizeMB = 10) {
+  const tempPath = 'temp_dummy.pdf';
+  const doc = new PDFDocument();
+  const tempStream = fs.createWriteStream(tempPath);
+  doc.pipe(tempStream);
 
-window.dispatchEvent(new CustomEvent('session-storage-change', {
-  detail: { key, value }
-}));
-
-
-// MFE2 - receiver (e.g., inside ngOnInit)
-ngOnInit(): void {
-  window.addEventListener('session-storage-change', this.handleStorageUpdate);
-}
-
-ngOnDestroy(): void {
-  window.removeEventListener('session-storage-change', this.handleStorageUpdate);
-}
-
-handleStorageUpdate = (event: any) => {
-  const { key, value } = event.detail;
-  if (key === 'myKey') {
-    // Take any action needed, like updating local state or triggering UI changes
-    console.log('Detected sessionStorage change from MFE1:', value);
+  for (let i = 0; i < 1000; i++) {
+    doc.text('DUMMY TEXT '.repeat(50));
   }
-};
+  doc.end();
+
+  tempStream.on('finish', () => {
+    const content = fs.readFileSync(tempPath);
+    const currentSize = content.length;
+    const targetSize = sizeMB * 1024 * 1024;
+    const paddingSize = Math.max(0, targetSize - currentSize);
+
+    const paddedBuffer = Buffer.concat([content, Buffer.alloc(paddingSize)]);
+    fs.writeFileSync(outputPath, paddedBuffer);
+    fs.unlinkSync(tempPath);
+    console.log(`✅ Dummy PDF created: ${outputPath} (${(paddedBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
+  });
+}
+
+// Example: Create 10MB PDF
+createDummyPDF('dummy_10mb.pdf', 10);
