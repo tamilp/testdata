@@ -1,20 +1,10 @@
-ngAfterViewInit() {
-    const iframeEl = this.iframeRef.nativeElement as HTMLIFrameElement;
+const iframeEl = document.getElementById('myIframe');
 
-    const resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        console.log('Iframe resized — React likely updated styles');
-
-        // Now override the styles
-        this.overrideStyles();
-      }
-    });
-
-    resizeObserver.observe(iframeEl);
+const resizeObserver = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    const rect = entry.contentRect;
+    console.log(`Iframe resized: width=${rect.width}, height=${rect.height}`);
   }
+});
 
-  overrideStyles() {
-    const target = this.iframeRef.nativeElement;
-    target.style.padding = '0px'; // example override
-    // OR use Renderer2 for safety
-  }
+resizeObserver.observe(iframeEl);
