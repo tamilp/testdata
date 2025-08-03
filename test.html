@@ -1,38 +1,30 @@
-import { AfterViewInit, Component, ElementRef, Renderer2, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'app-my-component',
-  templateUrl: './my-component.component.html'
+  templateUrl: './my-component.component.html',
 })
 export class MyComponent implements AfterViewInit, OnDestroy {
   private resizeObserver!: ResizeObserver;
 
-  constructor(private renderer: Renderer2, private elRef: ElementRef) {}
-
   ngAfterViewInit() {
-    // Dynamically create iframe
-    const iframe = this.renderer.createElement('iframe') as HTMLIFrameElement;
-    iframe.src = 'https://example.com';
-    iframe.style.width = '100%';
-    iframe.style.height = '500px';
-    iframe.style.border = 'none';
-    iframe.id = 'dynamicIframe';
+    const iframeEl = document.getElementById('myDynamicIframe') as HTMLIFrameElement;
 
-    // Append to container
-    const container = this.elRef.nativeElement.querySelector('#iframe-container');
-    this.renderer.appendChild(container, iframe);
+    if (iframeEl) {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const rect = entry.contentRect;
+          console.log(`Iframe resized: width=${rect.width}, height=${rect.height}`);
 
-    // Observe iframe resize
-    this.resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        const rect = entry.contentRect;
-        console.log(`Iframe resized: width=${rect.width}, height=${rect.height}`);
-        // Example style override after resize
-        iframe.style.border = '2px solid green';
-      }
-    });
+          // Override styles here if needed
+          iframeEl.style.border = '3px solid blue';
+        }
+      });
 
-    this.resizeObserver.observe(iframe);
+      this.resizeObserver.observe(iframeEl);
+    } else {
+      console.warn('Iframe not found in DOM!');
+    }
   }
 
   ngOnDestroy() {
