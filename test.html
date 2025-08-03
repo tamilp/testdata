@@ -1,34 +1,20 @@
-const fs = require('fs');
-const PDFDocument = require('pdfkit');
+ngAfterViewInit() {
+    const iframeEl = this.iframeRef.nativeElement as HTMLIFrameElement;
 
-/**
- * Generate a dummy PDF file of specified size.
- * @param {string} outputPath - Output file name (e.g., 'dummy_10mb.pdf')
- * @param {number} sizeMB - Target size in megabytes (e.g., 10)
- */
-function createDummyPDF(outputPath, sizeMB = 10) {
-  const tempPath = 'temp_dummy.pdf';
-  const doc = new PDFDocument();
-  const tempStream = fs.createWriteStream(tempPath);
-  doc.pipe(tempStream);
+    const resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        console.log('Iframe resized — React likely updated styles');
 
-  for (let i = 0; i < 1000; i++) {
-    doc.text('DUMMY TEXT '.repeat(50));
+        // Now override the styles
+        this.overrideStyles();
+      }
+    });
+
+    resizeObserver.observe(iframeEl);
   }
-  doc.end();
 
-  tempStream.on('finish', () => {
-    const content = fs.readFileSync(tempPath);
-    const currentSize = content.length;
-    const targetSize = sizeMB * 1024 * 1024;
-    const paddingSize = Math.max(0, targetSize - currentSize);
-
-    const paddedBuffer = Buffer.concat([content, Buffer.alloc(paddingSize)]);
-    fs.writeFileSync(outputPath, paddedBuffer);
-    fs.unlinkSync(tempPath);
-    console.log(`✅ Dummy PDF created: ${outputPath} (${(paddedBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
-  });
-}
-
-// Example: Create 10MB PDF
-createDummyPDF('dummy_10mb.pdf', 10);
+  overrideStyles() {
+    const target = this.iframeRef.nativeElement;
+    target.style.padding = '0px'; // example override
+    // OR use Renderer2 for safety
+  }
