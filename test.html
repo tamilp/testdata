@@ -1,13 +1,15 @@
 describe('YourComponent', () => {
   let component: YourComponent;
-
-  const observeSpy = jasmine.createSpy('observe');
-  const disconnectSpy = jasmine.createSpy('disconnect');
+  let observeSpy: jasmine.Spy;
+  let disconnectSpy: jasmine.Spy;
 
   beforeEach(() => {
-    // ✅ MOCK ResizeObserver BEFORE TestBed creation
+    // ✅ MOCK ResizeObserver BEFORE TestBed
+    observeSpy = jasmine.createSpy('observe');
+    disconnectSpy = jasmine.createSpy('disconnect');
+
     (window as any).ResizeObserver = function (cb: any) {
-      // Immediately invoke the callback with a fake entry
+      // Immediately simulate resize
       cb([{ contentRect: { width: 100, height: 100 } }]);
       return {
         observe: observeSpy,
@@ -16,45 +18,51 @@ describe('YourComponent', () => {
     };
 
     TestBed.configureTestingModule({
-      declarations: [YourComponent]
+      declarations: [YourComponent],
     });
 
     const fixture = TestBed.createComponent(YourComponent);
     component = fixture.componentInstance;
   });
 
-  it('should override iframe style and call ResizeObserver', () => {
-    // Mock iframe DOM
-    const mockBody = { style: {} };
-    const mockIframeDoc = {
-      getElementById: jasmine.createSpy().and.returnValue(mockBody)
-    } as any;
+  it('should create real iframe, find #root inside body, and observe resize', (done) => {
+    // ✅ Create real iframe
+    const iframe = document.createElement('iframe');
+    iframe.id = 'testIframe';
+    document.body.appendChild(iframe);
 
-    const mockIframeEl = {
-      contentDocument: mockIframeDoc,
-      contentWindow: { document: mockIframeDoc },
-      style: {}
-    } as any;
+    // ✅ Set iframe content and wait for load
+    iframe.onload = () => {
+      const iframeDoc = iframe.contentDocument!;
+      const body = iframeDoc.body;
 
-    // Spy on override method
-    spyOn(component, 'overrideIframeInsideDivStyle');
+      // ✅ Create div#root inside iframe body
+      const rootDiv = iframeDoc.createElement('div');
+      rootDiv.id = 'root';
+      body.appendChild(rootDiv);
 
-    // Execute the code block manually as in loadWidgetJS
-    const iframeDoc = mockIframeEl.contentDocument || mockIframeEl.contentWindow.document;
-    const body = iframeDoc.getElementById('root');
+      // Spy on the style override
+      const styleSpy = spyOn(component, 'overrideIframeInsideDivStyle').and.callThrough();
 
-    component.overrideIframeInsideDivStyle(body);
+      // ✅ Your component logic: call method to observe iframe
+      component['resizeObserver'] = new ResizeObserver(() => {
+        component.overrideIframeInsideDivStyle(rootDiv);
+      });
 
-    component['resizeObserver'] = new ResizeObserver(() => {
-      component.overrideIframeInsideDivStyle(body);
-    });
+      component.overrideIframeInsideDivStyle(rootDiv);
+      component['resizeObserver'].observe(iframe);
 
-    component['resizeObserver'].observe(mockIframeEl);
+      // ✅ Assertions
+      expect(styleSpy).toHaveBeenCalledTimes(2); // Initial + ResizeObserver
+      expect(observeSpy).toHaveBeenCalledWith(iframe);
 
-    // ✅ Assertions
-    expect(mockIframeDoc.getElementById).toHaveBeenCalledWith('root');
-    expect(component.overrideIframeInsideDivStyle).toHaveBeenCalledTimes(2);
-    expect(observeSpy).toHaveBeenCalledWith(mockIframeEl);
+      // Cleanup
+      document.body.removeChild(iframe);
+      done();
+    };
+
+    // ✅ Trigger iframe load with valid HTML content
+    iframe.srcdoc = '<html><body></body></html>';
   });
 
   it('should disconnect ResizeObserver on destroy', () => {
