@@ -2,15 +2,15 @@ describe('YourComponent', () => {
   let component: YourComponent;
   let observeSpy: jasmine.Spy;
   let disconnectSpy: jasmine.Spy;
+  let callbackRef: any;
 
   beforeEach(() => {
-    // ✅ MOCK ResizeObserver BEFORE TestBed
+    // Mock ResizeObserver globally
     observeSpy = jasmine.createSpy('observe');
     disconnectSpy = jasmine.createSpy('disconnect');
 
     (window as any).ResizeObserver = function (cb: any) {
-      // Immediately simulate resize
-      cb([{ contentRect: { width: 100, height: 100 } }]);
+      callbackRef = cb; // Save callback for manual triggering
       return {
         observe: observeSpy,
         disconnect: disconnectSpy
@@ -25,48 +25,43 @@ describe('YourComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create real iframe, find #root inside body, and observe resize', (done) => {
-    // ✅ Create real iframe
+  it('should observe real iframe and override #root style', (done) => {
+    // Create real iframe in DOM
     const iframe = document.createElement('iframe');
     iframe.id = 'testIframe';
     document.body.appendChild(iframe);
 
-    // ✅ Set iframe content and wait for load
+    // On iframe load, inject <div id="root">
     iframe.onload = () => {
       const iframeDoc = iframe.contentDocument!;
-      const body = iframeDoc.body;
-
-      // ✅ Create div#root inside iframe body
       const rootDiv = iframeDoc.createElement('div');
       rootDiv.id = 'root';
-      body.appendChild(rootDiv);
+      iframeDoc.body.appendChild(rootDiv);
 
-      // Spy on the style override
       const styleSpy = spyOn(component, 'overrideIframeInsideDivStyle').and.callThrough();
 
-      // ✅ Your component logic: call method to observe iframe
-      component['resizeObserver'] = new ResizeObserver(() => {
-        component.overrideIframeInsideDivStyle(rootDiv);
-      });
+      // ✅ Call method under test
+      component.observeIframeAndOverrideStyle(iframe);
 
-      component.overrideIframeInsideDivStyle(rootDiv);
-      component['resizeObserver'].observe(iframe);
+      // ✅ Simulate resize event manually
+      callbackRef([{ target: iframe, contentRect: { width: 100, height: 100 } }]);
 
       // ✅ Assertions
       expect(styleSpy).toHaveBeenCalledTimes(2); // Initial + ResizeObserver
       expect(observeSpy).toHaveBeenCalledWith(iframe);
+      expect(rootDiv.style.padding).toBe('0px');
 
-      // Cleanup
+      // Clean up
       document.body.removeChild(iframe);
       done();
     };
 
-    // ✅ Trigger iframe load with valid HTML content
+    // Trigger load
     iframe.srcdoc = '<html><body></body></html>';
   });
 
-  it('should disconnect ResizeObserver on destroy', () => {
-    component['resizeObserver'] = new ResizeObserver(() => {});
+  it('should disconnect observer on destroy', () => {
+    component.resizeObserver = new ResizeObserver(() => {});
     component.ngOnDestroy();
     expect(disconnectSpy).toHaveBeenCalled();
   });
