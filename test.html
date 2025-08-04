@@ -1,45 +1,62 @@
-describe('MyComponent', () => {
-  let component: MyComponent;
+describe('YourComponent', () => {
+  let component: YourComponent;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [MyComponent]
+      declarations: [YourComponent],
     });
 
-    const fixture = TestBed.createComponent(MyComponent);
+    const fixture = TestBed.createComponent(YourComponent);
     component = fixture.componentInstance;
   });
 
-  it('should apply styles and observe iframe resize', () => {
-    // Mock iframe, document, and body
+  it('should override styles and observe iframe resize', () => {
+    // Mock body element
     const mockBody = {
+      style: {},
+    };
+
+    // Mock iframe document
+    const mockIframeDoc = {
+      getElementById: jasmine.createSpy().and.returnValue(mockBody),
+    } as any;
+
+    // Mock iframe element
+    const mockIframeEl = {
+      contentDocument: mockIframeDoc,
+      contentWindow: { document: mockIframeDoc },
       style: {},
     } as any;
 
-    const mockIframeDoc = {
-      body: mockBody
-    } as Document;
+    // Spy on the style override method
+    spyOn(component, 'overrideIframeInsideDivStyle').and.callThrough();
 
-    const mockIframe = {
-      contentDocument: mockIframeDoc,
-      style: {},
-    } as unknown as HTMLIFrameElement;
-
-    // Spy on overrideIframeBodyStyle
-    spyOn(component, 'overrideIframeBodyStyle').and.callThrough();
-
-    // Mock ResizeObserver
+    // Mock ResizeObserver globally
     const observeSpy = jasmine.createSpy('observe');
-    (window as any).ResizeObserver = function(callback: any) {
+    (window as any).ResizeObserver = function (cb: any) {
+      // Immediately call the callback to simulate resize event
+      cb();
       return {
         observe: observeSpy,
-        disconnect: jasmine.createSpy('disconnect')
+        disconnect: jasmine.createSpy('disconnect'),
       };
     };
 
-    component.applyIframeStylingAndObserver(mockIframe);
+    // Simulate your logic
+    const iframeDoc = mockIframeEl.contentDocument || mockIframeEl.contentWindow.document;
+    const body = iframeDoc.getElementById('root');
 
-    expect(component.overrideIframeBodyStyle).toHaveBeenCalledWith(mockBody);
-    expect(observeSpy).toHaveBeenCalledWith(mockIframe);
+    component.overrideIframeInsideDivStyle(body);
+
+    component['resizeObserver'] = new ResizeObserver(() => {
+      component.overrideIframeInsideDivStyle(body);
+    });
+
+    component['resizeObserver'].observe(mockIframeEl);
+
+    // Assertions
+    expect(iframeDoc.getElementById).toHaveBeenCalledWith('root');
+    expect(component.overrideIframeInsideDivStyle).toHaveBeenCalledTimes(2); // once directly, once from observer
+    expect(observeSpy).toHaveBeenCalledWith(mockIframeEl);
   });
 });
