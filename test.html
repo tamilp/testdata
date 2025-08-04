@@ -1,45 +1,45 @@
-import { AfterViewInit, Component, OnDestroy } from '@angular/core';
+describe('MyComponent', () => {
+  let component: MyComponent;
 
-@Component({
-  selector: 'app-my-component',
-  templateUrl: './my-component.component.html'
-})
-export class MyComponent implements AfterViewInit, OnDestroy {
-  private resizeObserver!: ResizeObserver;
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      declarations: [MyComponent]
+    });
 
-  ngAfterViewInit() {
-    const iframeEl = document.getElementById('myIframe') as HTMLIFrameElement;
+    const fixture = TestBed.createComponent(MyComponent);
+    component = fixture.componentInstance;
+  });
 
-    // Wait for iframe content to load
-    iframeEl.onload = () => {
-      const iframeDoc = iframeEl.contentDocument || iframeEl.contentWindow?.document;
+  it('should apply styles and observe iframe resize', () => {
+    // Mock iframe, document, and body
+    const mockBody = {
+      style: {},
+    } as any;
 
-      if (iframeDoc) {
-        const body = iframeDoc.body;
+    const mockIframeDoc = {
+      body: mockBody
+    } as Document;
 
-        // Initial body style override
-        this.overrideIframeBodyStyle(body);
+    const mockIframe = {
+      contentDocument: mockIframeDoc,
+      style: {},
+    } as unknown as HTMLIFrameElement;
 
-        // Observe iframe resize and override style again if needed
-        this.resizeObserver = new ResizeObserver(() => {
-          console.log('Iframe resized. Reapplying body styles.');
-          this.overrideIframeBodyStyle(body);
-        });
+    // Spy on overrideIframeBodyStyle
+    spyOn(component, 'overrideIframeBodyStyle').and.callThrough();
 
-        this.resizeObserver.observe(iframeEl);
-      }
+    // Mock ResizeObserver
+    const observeSpy = jasmine.createSpy('observe');
+    (window as any).ResizeObserver = function(callback: any) {
+      return {
+        observe: observeSpy,
+        disconnect: jasmine.createSpy('disconnect')
+      };
     };
-  }
 
-  overrideIframeBodyStyle(body: HTMLBodyElement) {
-    body.style.padding = '0px';
-    body.style.backgroundColor = '#f0f0f0';
-    body.style.fontFamily = 'Arial, sans-serif';
-  }
+    component.applyIframeStylingAndObserver(mockIframe);
 
-  ngOnDestroy() {
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-  }
-}
+    expect(component.overrideIframeBodyStyle).toHaveBeenCalledWith(mockBody);
+    expect(observeSpy).toHaveBeenCalledWith(mockIframe);
+  });
+});
