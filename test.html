@@ -1,68 +1,56 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgZone } from '@angular/core';
+import { YourComponent } from './your.component';
+import { of } from 'rxjs';
+
 describe('YourComponent', () => {
   let component: YourComponent;
-  let observeSpy: jasmine.Spy;
-  let disconnectSpy: jasmine.Spy;
-  let callbackRef: any;
+  let fixture: ComponentFixture<YourComponent>;
+  let mockFdc3Client: any;
+  let mockChangeBorderRadius: jasmine.Spy;
 
   beforeEach(() => {
-    // Mock ResizeObserver globally
-    observeSpy = jasmine.createSpy('observe');
-    disconnectSpy = jasmine.createSpy('disconnect');
-
-    (window as any).ResizeObserver = function (cb: any) {
-      callbackRef = cb; // Save callback for manual triggering
-      return {
-        observe: observeSpy,
-        disconnect: disconnectSpy
-      };
+    mockFdc3Client = {
+      addIntentListener: jasmine.createSpy('addIntentListener')
     };
 
     TestBed.configureTestingModule({
       declarations: [YourComponent],
+      providers: [
+        NgZone,
+        { provide: 'fdc3Client', useValue: mockFdc3Client }
+      ]
     });
 
-    const fixture = TestBed.createComponent(YourComponent);
+    fixture = TestBed.createComponent(YourComponent);
     component = fixture.componentInstance;
+    mockChangeBorderRadius = spyOn(component, 'changeBorderRadius');
   });
 
-  it('should observe real iframe and override #root style', (done) => {
-    // Create real iframe in DOM
-    const iframe = document.createElement('iframe');
-    iframe.id = 'testIframe';
-    document.body.appendChild(iframe);
+  it('should add pega-chat-center class and call changeBorderRadius when payload type matches', () => {
+    // Capture the FDC3 listener callback
+    let listenerCallback: any;
+    mockFdc3Client.addIntentListener.and.callFake((intent, cb) => {
+      listenerCallback = cb;
+    });
 
-    // On iframe load, inject <div id="root">
-    iframe.onload = () => {
-      const iframeDoc = iframe.contentDocument!;
-      const rootDiv = iframeDoc.createElement('div');
-      rootDiv.id = 'root';
-      iframeDoc.body.appendChild(rootDiv);
+    // Run the code that registers the listener
+    component.ngOnInit?.();
 
-      const styleSpy = spyOn(component, 'overrideIframeInsideDivStyle').and.callThrough();
+    // Mock DOM structure with nested shadowRoots
+    const chatIconEl = document.createElement('div');
+    chatIconEl.classList.add('pega-chat-icon');
 
-      // ✅ Call method under test
-      component.observeIframeAndOverrideStyle(iframe);
+    const shadowRoot2: any = { querySelector: () => chatIconEl };
+    const shadowRoot1: any = { shadowRoot: shadowRoot2 };
 
-      // ✅ Simulate resize event manually
-      callbackRef([{ target: iframe, contentRect: { width: 100, height: 100 } }]);
+    spyOn(document, 'getElementById').and.returnValue(shadowRoot1);
 
-      // ✅ Assertions
-      expect(styleSpy).toHaveBeenCalledTimes(2); // Initial + ResizeObserver
-      expect(observeSpy).toHaveBeenCalledWith(iframe);
-      expect(rootDiv.style.padding).toBe('0px');
+    // Trigger the listener callback with matching payload
+    listenerCallback({ type: 'FDC3_EPF_MENU_ACTION' });
 
-      // Clean up
-      document.body.removeChild(iframe);
-      done();
-    };
-
-    // Trigger load
-    iframe.srcdoc = '<html><body></body></html>';
-  });
-
-  it('should disconnect observer on destroy', () => {
-    component.resizeObserver = new ResizeObserver(() => {});
-    component.ngOnDestroy();
-    expect(disconnectSpy).toHaveBeenCalled();
+    // Verify expectations
+    expect(chatIconEl.classList.contains('pega-chat-center')).toBeTrue();
+    expect(mockChangeBorderRadius).toHaveBeenCalled();
   });
 });
