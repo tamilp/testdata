@@ -9,14 +9,14 @@ import { tap } from 'rxjs';
 
 function formatWallClock(msEpoch: number) {
   const d = new Date(msEpoch);
-  return d.toISOString().split('T')[1].replace('Z', '');
+  return d.toISOString().split('T')[1].replace('Z', ''); // HH:mm:ss.SSS
 }
 
 function formatMs(v: number) {
   return `${v.toFixed(3)} ms`;
 }
 
-function logRequestResponsePhases(reqUrl: string) {
+function logDevToolsPhases(reqUrl: string) {
   setTimeout(() => {
     const entries = performance.getEntriesByType("resource") as PerformanceResourceTiming[];
     const target = new URL(reqUrl, location.href).href;
@@ -30,17 +30,27 @@ function logRequestResponsePhases(reqUrl: string) {
     const navStart = Date.now() - performance.now();
     const abs = (t: number) => navStart + t;
 
-    const requestStart = entry.requestStart;
-    const requestEnd   = entry.responseStart; // request ends when waiting begins
-    const responseStart= entry.responseStart;
-    const responseEnd  = entry.responseEnd;
+    const startTime     = entry.startTime;
+    const requestStart  = entry.requestStart;
+    const responseStart = entry.responseStart;
+    const responseEnd   = entry.responseEnd;
 
     console.log(`[📡 Network timeline for ${reqUrl}]`);
-    console.log(`  Request Start : ${formatWallClock(abs(requestStart))} (+${formatMs(requestStart - entry.startTime)})`);
-    console.log(`  Request End   : ${formatWallClock(abs(requestEnd))} (+${formatMs(requestEnd - entry.startTime)})`);
-    console.log(`  Response Start: ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - entry.startTime)})`);
-    console.log(`  Response End  : ${formatWallClock(abs(responseEnd))} (+${formatMs(responseEnd - entry.startTime)})`);
-    console.log(`  Total Duration: ${formatMs(responseEnd - entry.startTime)}`);
+
+    // Request Sent
+    console.log(`  Request Sent Start : ${formatWallClock(abs(startTime))} (+${formatMs(startTime - startTime)})`);
+    console.log(`  Request Sent End   : ${formatWallClock(abs(requestStart))} (+${formatMs(requestStart - startTime)})`);
+
+    // Waiting (server processing / TTFB)
+    console.log(`  Waiting for Server Response Start : ${formatWallClock(abs(requestStart))} (+${formatMs(requestStart - startTime)})`);
+    console.log(`  Waiting for Server Response End   : ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - startTime)})`);
+
+    // Content Download
+    console.log(`  Content Download Start : ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - startTime)})`);
+    console.log(`  Content Download End   : ${formatWallClock(abs(responseEnd))} (+${formatMs(responseEnd - startTime)})`);
+
+    // Final total
+    console.log(`  Total Duration: ${formatMs(responseEnd - startTime)}`);
   }, 50);
 }
 
@@ -58,12 +68,12 @@ export const detailedLoggingInterceptor: HttpInterceptorFn =
         next: (event: HttpEvent<unknown>) => {
           if (event.type === HttpEventType.Response) {
             console.log(`${prefix()} [RESPONSE END] ${req.method} ${req.urlWithParams}`);
-            logRequestResponsePhases(req.urlWithParams);
+            logDevToolsPhases(req.urlWithParams);
           }
         },
         error: (error) => {
           console.error(`${prefix()} [RESPONSE ERROR] ${req.method} ${req.urlWithParams}`, error);
-          logRequestResponsePhases(req.urlWithParams);
+          logDevToolsPhases(req.urlWithParams);
         }
       })
     );
