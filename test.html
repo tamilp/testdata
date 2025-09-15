@@ -7,38 +7,31 @@ import {
 } from '@angular/common/http';
 import { tap } from 'rxjs';
 
-/* ---------- helpers ---------- */
+/**
+ * REQUEST_SENT_MODE:
+ *  - 'devtools' -> Request Sent = requestStart - startTime  (matches DevTools waterfall grouping)
+ *  - 'upload'   -> Request Sent = responseStart - requestStart (actual upload time approximation)
+ */
+const REQUEST_SENT_MODE: 'devtools' | 'upload' = 'devtools';
+
 function padRight(s: string, len = 40) { return s + ' '.repeat(Math.max(0, len - s.length)); }
-function formatClock(msEpoch: number) {
-  return new Date(msEpoch).toISOString().split('T')[1].replace('Z', ''); // HH:mm:ss.SSS
-}
+function formatClock(msEpoch: number) { return new Date(msEpoch).toISOString().split('T')[1].replace('Z', ''); }
 function fmtMs(v: number) { return `${v.toFixed(2)} ms`; }
 
-/**
- * Render a simple ASCII bar based on durations.
- * longestDuration maps to width chars; others scale proportionally.
- */
 function renderBars(requestSent: number, waiting: number, download: number, width = 40) {
   const max = Math.max(requestSent, waiting, download, 1);
   const r = Math.round((requestSent / max) * width);
   const w = Math.round((waiting / max) * width);
   const d = Math.round((download / max) * width);
-
   const bar = (n: number, ch = '█') => ch.repeat(Math.max(1, n));
-  return {
-    requestBar: bar(r, '▇'),
-    waitingBar: bar(w, '▇'),
-    downloadBar: bar(d, '▇')
-  };
+  return { requestBar: bar(r, '▇'), waitingBar: bar(w, '▇'), downloadBar: bar(d, '▇') };
 }
 
-/* ---------- find resource timing entry ---------- */
 function findResourceTiming(reqUrl: string): PerformanceResourceTiming | undefined {
   try {
     const target = new URL(reqUrl, location.href).href;
     const byName = performance.getEntriesByName(target) as PerformanceResourceTiming[];
     if (byName && byName.length) return byName[byName.length - 1];
-
     const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
     for (let i = entries.length - 1; i >= 0; i--) {
       const e = entries[i];
@@ -49,9 +42,7 @@ function findResourceTiming(reqUrl: string): PerformanceResourceTiming | undefin
   return undefined;
 }
 
-/* ---------- main logging that replicates DevTools image ---------- */
 function logDevToolsStyle(reqUrl: string) {
-  // short delay so the browser adds the resource timing entry
   setTimeout(() => {
     const entry = findResourceTiming(reqUrl);
     if (!entry) {
@@ -59,56 +50,61 @@ function logDevToolsStyle(reqUrl: string) {
       return;
     }
 
-    // convert performance timing (relative to navigationStart) to epoch ms
     const navStartEpoch = Date.now() - performance.now();
     const abs = (t: number) => navStartEpoch + t;
 
-    // Fields from PerformanceResourceTiming
-    const startTime = entry.startTime;         // resource fetch start
-    const requestStart = entry.requestStart;   // when browser starts sending request bytes
-    const responseStart = entry.responseStart; // TTFB (first response byte)
-    const responseEnd = entry.responseEnd;     // response fully downloaded
+    const startTime = entry.startTime;           // resource fetch start
+    const requestStart = entry.requestStart;     // when browser starts sending request bytes
+    const responseStart = entry.responseStart;   // when first response byte arrives
+    const responseEnd = entry.responseEnd;       // response finished
 
-    // Compute durations (ms)
-    // NOTE: requestSent = time spent uploading/sending request bytes ≈ requestStart - startTime
-    // waiting = server processing / TTFB = responseStart - requestStart
-    // download = responseEnd - responseStart
-    const requestSent = Math.max(0, requestStart - startTime);
+    // compute durations:
+    // DevTools grouping: requestSent = requestStart - startTime
+    // Upload approximation: requestSent = responseStart - requestStart
+    const requestSent = REQUEST_SENT_MODE === 'upload'
+      ? Math.max(0, responseStart - requestStart)
+      : Math.max(0, requestStart - startTime);
+
     const waiting = Math.max(0, responseStart - requestStart);
     const download = Math.max(0, responseEnd - responseStart);
     const total = Math.max(0, responseEnd - startTime);
 
-    // build bars proportional to largest phase
     const bars = renderBars(requestSent, waiting, download, 40);
 
-    // Print header like the screenshot
     console.log(`\n[📡 Network timing for ${reqUrl}]`);
-    // Request Sent
     console.log(`Request sent             ${padRight(bars.requestBar, 45)} ${fmtMs(requestSent)}`);
-    // Waiting
     console.log(`Waiting for server response ${padRight(bars.waitingBar, 45)} ${fmtMs(waiting)}`);
-    // Content Download
     console.log(`Content Download         ${padRight(bars.downloadBar, 45)} ${fmtMs(download)}`);
-    // Final total (right aligned)
     console.log(`${' '.repeat(60)}Total: ${fmtMs(total)}\n`);
 
-    // Also print exact wall-clock start/end for each phase (optional)
+    // print precise wall-clock start/end lines depending on chosen mode
+    if (REQUEST_SENT_MODE === 'upload') {
+      // upload-mode: request sent is requestStart -> responseStart
+      console.log(
+        `  Request Sent Start : ${formatClock(abs(requestStart))}` +
+        `  End: ${formatClock(abs(responseStart))} (+${fmtMs(responseStart - requestStart)})`
+      );
+    } else {
+      // devtools-mode: request sent is startTime -> requestStart
+      console.log(
+        `  Request Sent Start : ${formatClock(abs(startTime))}` +
+        `  End: ${formatClock(abs(requestStart))} (+${fmtMs(requestStart - startTime)})`
+      );
+    }
+
     console.log(
-      `  Request Sent Start : ${formatClock(abs(requestStart - requestSent))}` +
-      `  End: ${formatClock(abs(requestStart))}`
-    );
-    console.log(
-      `  Waiting Start      : ${formatClock(abs(requestStart)  )}` +
-      `  End: ${formatClock(abs(responseStart))}`
+      `  Waiting Start      : ${formatClock(abs(requestStart))}` +
+      `  End: ${formatClock(abs(responseStart))} (+${fmtMs(responseStart - requestStart)})`
     );
     console.log(
       `  Content Download Start : ${formatClock(abs(responseStart))}` +
-      `  End: ${formatClock(abs(responseEnd))}`
+      `  End: ${formatClock(abs(responseEnd))} (+${fmtMs(responseEnd - responseStart)})`
     );
+
+    console.debug('  raw resource timing entry:', entry);
   }, 60);
 }
 
-/* ---------- interceptor ---------- */
 export const detailedLoggingInterceptor: HttpInterceptorFn =
   (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
     const hrStart = performance.now();
