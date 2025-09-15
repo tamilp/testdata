@@ -9,9 +9,9 @@ import { tap } from 'rxjs';
 
 export const detailedLoggingInterceptor: HttpInterceptorFn =
   (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-    const started = Date.now();
+    const started = performance.now();
 
-    const formatTime = () => `${Date.now() - started} ms`;
+    const formatTime = () => `${(performance.now() - started).toFixed(3)} ms`;
 
     console.log(`[${formatTime()}] [REQUEST START] ${req.method} ${req.urlWithParams}`);
 
@@ -46,19 +46,3 @@ export const detailedLoggingInterceptor: HttpInterceptorFn =
       })
     );
   };
-
-
-
-          import { bootstrapApplication } from '@angular/platform-browser';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { AppComponent } from './app/app.component';
-import { detailedLoggingInterceptor } from './app/interceptors/detailed-logging.interceptor';
-
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideHttpClient(
-      withInterceptors([detailedLoggingInterceptor])
-    )
-  ]
-});
-
