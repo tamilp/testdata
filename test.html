@@ -1,21 +1,3 @@
-import {
-  HttpEvent,
-  HttpInterceptorFn,
-  HttpRequest,
-  HttpHandlerFn,
-  HttpEventType
-} from '@angular/common/http';
-import { tap } from 'rxjs';
-
-function formatWallClock(msEpoch: number) {
-  const d = new Date(msEpoch);
-  return d.toISOString().split('T')[1].replace('Z', ''); // HH:mm:ss.SSS
-}
-
-function formatMs(v: number) {
-  return `${v.toFixed(3)} ms`;
-}
-
 function logDevToolsPhases(reqUrl: string) {
   setTimeout(() => {
     const entries = performance.getEntriesByType("resource") as PerformanceResourceTiming[];
@@ -30,7 +12,6 @@ function logDevToolsPhases(reqUrl: string) {
     const navStart = Date.now() - performance.now();
     const abs = (t: number) => navStart + t;
 
-    const startTime     = entry.startTime;
     const requestStart  = entry.requestStart;
     const responseStart = entry.responseStart;
     const responseEnd   = entry.responseEnd;
@@ -38,43 +19,18 @@ function logDevToolsPhases(reqUrl: string) {
     console.log(`[📡 Network timeline for ${reqUrl}]`);
 
     // Request Sent
-    console.log(`  Request Sent Start : ${formatWallClock(abs(startTime))} (+${formatMs(startTime - startTime)})`);
-    console.log(`  Request Sent End   : ${formatWallClock(abs(requestStart))} (+${formatMs(requestStart - startTime)})`);
+    console.log(`  Request Sent Start : ${formatWallClock(abs(requestStart))} (+0.000 ms)`);
+    console.log(`  Request Sent End   : ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - requestStart)})`);
 
-    // Waiting (server processing / TTFB)
-    console.log(`  Waiting for Server Response Start : ${formatWallClock(abs(requestStart))} (+${formatMs(requestStart - startTime)})`);
-    console.log(`  Waiting for Server Response End   : ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - startTime)})`);
+    // Waiting (server processing)
+    console.log(`  Waiting for Server Response Start : ${formatWallClock(abs(requestStart))} (+0.000 ms)`);
+    console.log(`  Waiting for Server Response End   : ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - requestStart)})`);
 
     // Content Download
-    console.log(`  Content Download Start : ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - startTime)})`);
-    console.log(`  Content Download End   : ${formatWallClock(abs(responseEnd))} (+${formatMs(responseEnd - startTime)})`);
+    console.log(`  Content Download Start : ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - requestStart)})`);
+    console.log(`  Content Download End   : ${formatWallClock(abs(responseEnd))} (+${formatMs(responseEnd - requestStart)})`);
 
     // Final total
-    console.log(`  Total Duration: ${formatMs(responseEnd - startTime)}`);
+    console.log(`  Total Duration: ${formatMs(responseEnd - requestStart)}`);
   }, 50);
 }
-
-export const detailedLoggingInterceptor: HttpInterceptorFn =
-  (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-    const started = performance.now();
-    const formatElapsed = () => `${(performance.now() - started).toFixed(3)} ms`;
-    const now = () => new Date().toISOString().split('T')[1].replace('Z', '');
-    const prefix = () => `[${now()} | +${formatElapsed()}]`;
-
-    console.log(`${prefix()} [REQUEST START] ${req.method} ${req.urlWithParams}`);
-
-    return next(req).pipe(
-      tap({
-        next: (event: HttpEvent<unknown>) => {
-          if (event.type === HttpEventType.Response) {
-            console.log(`${prefix()} [RESPONSE END] ${req.method} ${req.urlWithParams}`);
-            logDevToolsPhases(req.urlWithParams);
-          }
-        },
-        error: (error) => {
-          console.error(`${prefix()} [RESPONSE ERROR] ${req.method} ${req.urlWithParams}`, error);
-          logDevToolsPhases(req.urlWithParams);
-        }
-      })
-    );
-  };
