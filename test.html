@@ -1,11 +1,8 @@
 function documentUpload(url: string, data?: any, httpOptions?: any): Promise<any> {
   const headers = (httpOptions && httpOptions.headers) || {};
-  const started = Date.now();
   const timestamp = () => new Date().toISOString();
-  const elapsed = () => `${Date.now() - started} ms`;
 
-  // Request start
-  console.log(`[${timestamp()} | +${elapsed()}] [FETCH REQUEST START] URL: ${url}`);
+  console.log(`[${timestamp()}] [FETCH REQUEST START] URL: ${url}`);
 
   return fetch(url, {
     method: 'POST',
@@ -13,32 +10,37 @@ function documentUpload(url: string, data?: any, httpOptions?: any): Promise<any
     body: data
   })
     .then(async response => {
-      // Response start
-      console.log(`[${timestamp()} | +${elapsed()}] [FETCH RESPONSE START] URL: ${url} Status: ${response.status}`);
+      console.log(`[${timestamp()}] [FETCH RESPONSE START] URL: ${url} Status: ${response.status}`);
 
-      // Request end (using Performance API for real upload duration)
+      const body = await response.json();
+
+      // Defer logging to ensure PerformanceEntry is available
       setTimeout(() => {
         const entry = performance.getEntriesByType("resource")
           .reverse()
           .find(e => (e as PerformanceResourceTiming).name.includes(url)) as PerformanceResourceTiming;
 
         if (entry) {
-          const uploadTime = entry.responseStart - entry.requestStart; // ms
-          console.log(`[${timestamp()}] [FETCH REQUEST END] URL: ${url} Time: ${uploadTime.toFixed(2)} ms`);
+          const requestSent = entry.requestStart - entry.startTime;
+          const waiting = entry.responseStart - entry.requestStart;
+          const download = entry.responseEnd - entry.responseStart;
+          const total = entry.responseEnd - entry.startTime;
+
+          console.log(`\n[📡 Network timing for ${url}]`);
+          console.log(`  Request sent             ${requestSent.toFixed(2)} ms`);
+          console.log(`  Waiting for server resp  ${waiting.toFixed(2)} ms`);
+          console.log(`  Content Download         ${download.toFixed(2)} ms`);
+          console.log(`  Total                    ${total.toFixed(2)} ms\n`);
         } else {
-          console.warn(`[${timestamp()}] [FETCH REQUEST END] Could not determine exact timing for URL: ${url}`);
+          console.warn(`[${timestamp()}] No Performance entry found for URL: ${url}`);
         }
-      }, 60);
+      }, 100);
 
-      // Parse body
-      const body = await response.json();
-
-      // Response end
-      console.log(`[${timestamp()} | +${elapsed()}] [FETCH RESPONSE END] URL: ${url}`);
+      console.log(`[${timestamp()}] [FETCH RESPONSE END] URL: ${url}`);
       return body;
     })
     .catch(error => {
-      console.error(`[${timestamp()} | +${elapsed()}] [FETCH REQUEST END WITH ERROR] URL: ${url}`, error);
+      console.error(`[${timestamp()}] [FETCH REQUEST END WITH ERROR] URL: ${url}`, error);
       throw error;
     });
 }
