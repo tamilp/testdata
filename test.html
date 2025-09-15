@@ -1,129 +1,33 @@
-import {
-  HttpEvent,
-  HttpEventType,
-  HttpInterceptorFn,
-  HttpRequest,
-  HttpHandlerFn
-} from '@angular/common/http';
-import { tap } from 'rxjs';
+function documentUpload(url: string, data?: any, httpOptions?: any): Promise<any> {
+  const headers = (httpOptions && httpOptions.headers) || {};
+  const started = Date.now();
+  const timestamp = () => new Date().toISOString();
 
-/**
- * REQUEST_SENT_MODE:
- *  - 'devtools' -> Request Sent = requestStart - startTime  (matches DevTools waterfall grouping)
- *  - 'upload'   -> Request Sent = responseStart - requestStart (actual upload time approximation)
- */
-const REQUEST_SENT_MODE: 'devtools' | 'upload' = 'devtools';
+  // Request start
+  console.log(`[${timestamp()}] [FETCH REQUEST START] URL: ${url}`);
 
-function padRight(s: string, len = 40) { return s + ' '.repeat(Math.max(0, len - s.length)); }
-function formatClock(msEpoch: number) { return new Date(msEpoch).toISOString().split('T')[1].replace('Z', ''); }
-function fmtMs(v: number) { return `${v.toFixed(2)} ms`; }
+  return fetch(url, {
+    method: 'POST',
+    headers,
+    body: data
+  })
+    .then(response => {
+      // Request end (fetch has sent request, got a response object)
+      console.log(`[${timestamp()}] [FETCH REQUEST END] URL: ${url}`);
 
-function renderBars(requestSent: number, waiting: number, download: number, width = 40) {
-  const max = Math.max(requestSent, waiting, download, 1);
-  const r = Math.round((requestSent / max) * width);
-  const w = Math.round((waiting / max) * width);
-  const d = Math.round((download / max) * width);
-  const bar = (n: number, ch = '█') => ch.repeat(Math.max(1, n));
-  return { requestBar: bar(r, '▇'), waitingBar: bar(w, '▇'), downloadBar: bar(d, '▇') };
+      // Response start (we have status + headers)
+      console.log(`[${timestamp()}] [FETCH RESPONSE START] URL: ${url} Status: ${response.status}`);
+
+      return response.json().then(body => {
+        const elapsed = Date.now() - started;
+        // Response end (body fully read)
+        console.log(`[${timestamp()}] [FETCH RESPONSE END] URL: ${url} Time: ${elapsed} ms`);
+        return body;
+      });
+    })
+    .catch(error => {
+      const elapsed = Date.now() - started;
+      console.error(`[${timestamp()}] [FETCH REQUEST END WITH ERROR] URL: ${url} Time: ${elapsed} ms`, error);
+      throw error;
+    });
 }
-
-function findResourceTiming(reqUrl: string): PerformanceResourceTiming | undefined {
-  try {
-    const target = new URL(reqUrl, location.href).href;
-    const byName = performance.getEntriesByName(target) as PerformanceResourceTiming[];
-    if (byName && byName.length) return byName[byName.length - 1];
-    const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-    for (let i = entries.length - 1; i >= 0; i--) {
-      const e = entries[i];
-      if (!e.name) continue;
-      if (e.name === target || e.name.includes(reqUrl) || target.includes(e.name)) return e;
-    }
-  } catch (_) { /* ignore */ }
-  return undefined;
-}
-
-function logDevToolsStyle(reqUrl: string) {
-  setTimeout(() => {
-    const entry = findResourceTiming(reqUrl);
-    if (!entry) {
-      console.warn(`No PerformanceResourceTiming entry found for: ${reqUrl}`);
-      return;
-    }
-
-    const navStartEpoch = Date.now() - performance.now();
-    const abs = (t: number) => navStartEpoch + t;
-
-    const startTime = entry.startTime;           // resource fetch start
-    const requestStart = entry.requestStart;     // when browser starts sending request bytes
-    const responseStart = entry.responseStart;   // when first response byte arrives
-    const responseEnd = entry.responseEnd;       // response finished
-
-    // compute durations:
-    // DevTools grouping: requestSent = requestStart - startTime
-    // Upload approximation: requestSent = responseStart - requestStart
-    const requestSent = REQUEST_SENT_MODE === 'upload'
-      ? Math.max(0, responseStart - requestStart)
-      : Math.max(0, requestStart - startTime);
-
-    const waiting = Math.max(0, responseStart - requestStart);
-    const download = Math.max(0, responseEnd - responseStart);
-    const total = Math.max(0, responseEnd - startTime);
-
-    const bars = renderBars(requestSent, waiting, download, 40);
-
-    console.log(`\n[📡 Network timing for ${reqUrl}]`);
-    console.log(`Request sent             ${padRight(bars.requestBar, 45)} ${fmtMs(requestSent)}`);
-    console.log(`Waiting for server response ${padRight(bars.waitingBar, 45)} ${fmtMs(waiting)}`);
-    console.log(`Content Download         ${padRight(bars.downloadBar, 45)} ${fmtMs(download)}`);
-    console.log(`${' '.repeat(60)}Total: ${fmtMs(total)}\n`);
-
-    // print precise wall-clock start/end lines depending on chosen mode
-    if (REQUEST_SENT_MODE === 'upload') {
-      // upload-mode: request sent is requestStart -> responseStart
-      console.log(
-        `  Request Sent Start : ${formatClock(abs(requestStart))}` +
-        `  End: ${formatClock(abs(responseStart))} (+${fmtMs(responseStart - requestStart)})`
-      );
-    } else {
-      // devtools-mode: request sent is startTime -> requestStart
-      console.log(
-        `  Request Sent Start : ${formatClock(abs(startTime))}` +
-        `  End: ${formatClock(abs(requestStart))} (+${fmtMs(requestStart - startTime)})`
-      );
-    }
-
-    console.log(
-      `  Waiting Start      : ${formatClock(abs(requestStart))}` +
-      `  End: ${formatClock(abs(responseStart))} (+${fmtMs(responseStart - requestStart)})`
-    );
-    console.log(
-      `  Content Download Start : ${formatClock(abs(responseStart))}` +
-      `  End: ${formatClock(abs(responseEnd))} (+${fmtMs(responseEnd - responseStart)})`
-    );
-
-    console.debug('  raw resource timing entry:', entry);
-  }, 60);
-}
-
-export const detailedLoggingInterceptor: HttpInterceptorFn =
-  (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-    const hrStart = performance.now();
-    const nowStr = () => new Date().toISOString().split('T')[1].replace('Z', '');
-    const elapsed = () => `${(performance.now() - hrStart).toFixed(3)} ms`;
-    console.log(`[${nowStr()} | +${elapsed()}] [REQUEST START] ${req.method} ${req.urlWithParams}`);
-
-    return next(req).pipe(
-      tap({
-        next: (event: HttpEvent<unknown>) => {
-          if (event.type === HttpEventType.Response) {
-            console.log(`[${nowStr()} | +${elapsed()}] [RESPONSE END] ${req.method} ${req.urlWithParams}`);
-            logDevToolsStyle(req.urlWithParams);
-          }
-        },
-        error: (err) => {
-          console.error(`[${nowStr()} | +${elapsed()}] [RESPONSE ERROR] ${req.method} ${req.urlWithParams}`, err);
-          logDevToolsStyle(req.urlWithParams);
-        }
-      })
-    );
-  };
