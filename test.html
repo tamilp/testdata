@@ -27,21 +27,20 @@ function logRequestResponsePhases(reqUrl: string) {
       return;
     }
 
-    // NavigationStart reference point
     const navStart = Date.now() - performance.now();
     const abs = (t: number) => navStart + t;
 
-    const requestStart = abs(entry.requestStart);
-    const requestEnd   = abs(entry.responseStart); // request ends when waiting starts
-    const responseStart= abs(entry.responseStart);
-    const responseEnd  = abs(entry.responseEnd);
+    const requestStart = entry.requestStart;
+    const requestEnd   = entry.responseStart; // request ends when waiting begins
+    const responseStart= entry.responseStart;
+    const responseEnd  = entry.responseEnd;
 
-    console.log(`📡 Network timeline for ${reqUrl}`);
-    console.log(`  Request Start : ${formatWallClock(requestStart)} (+${formatMs(entry.requestStart - entry.startTime)})`);
-    console.log(`  Request End   : ${formatWallClock(requestEnd)}`);
-    console.log(`  Response Start: ${formatWallClock(responseStart)}`);
-    console.log(`  Response End  : ${formatWallClock(responseEnd)}`);
-    console.log(`  Total Duration: ${formatMs(entry.responseEnd - entry.startTime)}`);
+    console.log(`[📡 Network timeline for ${reqUrl}]`);
+    console.log(`  Request Start : ${formatWallClock(abs(requestStart))} (+${formatMs(requestStart - entry.startTime)})`);
+    console.log(`  Request End   : ${formatWallClock(abs(requestEnd))} (+${formatMs(requestEnd - entry.startTime)})`);
+    console.log(`  Response Start: ${formatWallClock(abs(responseStart))} (+${formatMs(responseStart - entry.startTime)})`);
+    console.log(`  Response End  : ${formatWallClock(abs(responseEnd))} (+${formatMs(responseEnd - entry.startTime)})`);
+    console.log(`  Total Duration: ${formatMs(responseEnd - entry.startTime)}`);
   }, 50);
 }
 
