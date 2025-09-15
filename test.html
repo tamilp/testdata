@@ -11,37 +11,45 @@ export const detailedLoggingInterceptor: HttpInterceptorFn =
   (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
     const started = performance.now();
 
-    const formatTime = () => `${(performance.now() - started).toFixed(3)} ms`;
+    const formatElapsed = () => `${(performance.now() - started).toFixed(3)} ms`;
 
-    console.log(`[${formatTime()}] [REQUEST START] ${req.method} ${req.urlWithParams}`);
+    const formatWallClock = () => {
+      const now = new Date();
+      return now.toISOString().split('T')[1].replace('Z', ''); 
+      // Gives "HH:mm:ss.SSS"
+    };
+
+    const logPrefix = () => `[${formatWallClock()} | +${formatElapsed()}]`;
+
+    console.log(`${logPrefix()} [REQUEST START] ${req.method} ${req.urlWithParams}`);
 
     return next(req).pipe(
       tap({
         next: (event: HttpEvent<unknown>) => {
           switch (event.type) {
             case HttpEventType.Sent:
-              console.log(`[${formatTime()}] [REQUEST SENT to backend] ${req.method} ${req.urlWithParams}`);
+              console.log(`${logPrefix()} [REQUEST SENT to backend] ${req.method} ${req.urlWithParams}`);
               break;
 
             case HttpEventType.ResponseHeader:
-              console.log(`[${formatTime()}] [RESPONSE STARTED] headers received for ${req.method} ${req.urlWithParams}`);
+              console.log(`${logPrefix()} [RESPONSE STARTED] headers received for ${req.method} ${req.urlWithParams}`);
               break;
 
             case HttpEventType.DownloadProgress:
-              console.log(`[${formatTime()}] [RESPONSE IN PROGRESS] ${req.method} ${req.urlWithParams}, received: ${event.loaded} bytes`);
+              console.log(`${logPrefix()} [RESPONSE IN PROGRESS] ${req.method} ${req.urlWithParams}, received: ${event.loaded} bytes`);
               break;
 
             case HttpEventType.UploadProgress:
-              console.log(`[${formatTime()}] [REQUEST UPLOAD IN PROGRESS] ${req.method} ${req.urlWithParams}, sent: ${event.loaded} bytes`);
+              console.log(`${logPrefix()} [REQUEST UPLOAD IN PROGRESS] ${req.method} ${req.urlWithParams}, sent: ${event.loaded} bytes`);
               break;
 
             case HttpEventType.Response:
-              console.log(`[${formatTime()}] [RESPONSE COMPLETE] ${req.method} ${req.urlWithParams}`, event.body);
+              console.log(`${logPrefix()} [RESPONSE COMPLETE] ${req.method} ${req.urlWithParams}`, event.body);
               break;
           }
         },
         error: (error) => {
-          console.error(`[${formatTime()}] [RESPONSE ERROR] ${req.method} ${req.urlWithParams}`, error);
+          console.error(`${logPrefix()} [RESPONSE ERROR] ${req.method} ${req.urlWithParams}`, error);
         }
       })
     );
