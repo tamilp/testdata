@@ -9,39 +9,56 @@ import { tap } from 'rxjs';
 
 export const detailedLoggingInterceptor: HttpInterceptorFn =
   (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-    console.log(`[REQUEST START] ${req.method} ${req.urlWithParams}`);
     const started = Date.now();
+
+    const formatTime = () => `${Date.now() - started} ms`;
+
+    console.log(`[${formatTime()}] [REQUEST START] ${req.method} ${req.urlWithParams}`);
 
     return next(req).pipe(
       tap({
         next: (event: HttpEvent<unknown>) => {
           switch (event.type) {
             case HttpEventType.Sent:
-              console.log(`[REQUEST SENT to backend] ${req.method} ${req.urlWithParams}`);
+              console.log(`[${formatTime()}] [REQUEST SENT to backend] ${req.method} ${req.urlWithParams}`);
               break;
 
             case HttpEventType.ResponseHeader:
-              console.log(`[RESPONSE STARTED] headers received for ${req.method} ${req.urlWithParams}`);
+              console.log(`[${formatTime()}] [RESPONSE STARTED] headers received for ${req.method} ${req.urlWithParams}`);
               break;
 
             case HttpEventType.DownloadProgress:
-              console.log(`[RESPONSE IN PROGRESS] ${req.method} ${req.urlWithParams}, received: ${event.loaded} bytes`);
+              console.log(`[${formatTime()}] [RESPONSE IN PROGRESS] ${req.method} ${req.urlWithParams}, received: ${event.loaded} bytes`);
               break;
 
             case HttpEventType.UploadProgress:
-              console.log(`[REQUEST UPLOAD IN PROGRESS] ${req.method} ${req.urlWithParams}, sent: ${event.loaded} bytes`);
+              console.log(`[${formatTime()}] [REQUEST UPLOAD IN PROGRESS] ${req.method} ${req.urlWithParams}, sent: ${event.loaded} bytes`);
               break;
 
             case HttpEventType.Response:
-              const elapsed = Date.now() - started;
-              console.log(`[RESPONSE COMPLETE] ${req.method} ${req.urlWithParams} (${elapsed} ms)`, event.body);
+              console.log(`[${formatTime()}] [RESPONSE COMPLETE] ${req.method} ${req.urlWithParams}`, event.body);
               break;
           }
         },
         error: (error) => {
-          const elapsed = Date.now() - started;
-          console.error(`[RESPONSE ERROR] ${req.method} ${req.urlWithParams} (${elapsed} ms)`, error);
+          console.error(`[${formatTime()}] [RESPONSE ERROR] ${req.method} ${req.urlWithParams}`, error);
         }
       })
     );
   };
+
+
+
+          import { bootstrapApplication } from '@angular/platform-browser';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { AppComponent } from './app/app.component';
+import { detailedLoggingInterceptor } from './app/interceptors/detailed-logging.interceptor';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideHttpClient(
+      withInterceptors([detailedLoggingInterceptor])
+    )
+  ]
+});
+
