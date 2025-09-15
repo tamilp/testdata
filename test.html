@@ -1,56 +1,64 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgZone } from '@angular/core';
-import { YourComponent } from './your.component';
-import { of } from 'rxjs';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { LoggingInterceptor } from './logging.interceptor';
 
-describe('YourComponent', () => {
-  let component: YourComponent;
-  let fixture: ComponentFixture<YourComponent>;
-  let mockFdc3Client: any;
-  let mockChangeBorderRadius: jasmine.Spy;
+@NgModule({
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: LoggingInterceptor, multi: true }
+  ]
+})
+export class AppModule {}
 
-  beforeEach(() => {
-    mockFdc3Client = {
-      addIntentListener: jasmine.createSpy('addIntentListener')
-    };
 
-    TestBed.configureTestingModule({
-      declarations: [YourComponent],
-      providers: [
-        NgZone,
-        { provide: 'fdc3Client', useValue: mockFdc3Client }
-      ]
-    });
 
-    fixture = TestBed.createComponent(YourComponent);
-    component = fixture.componentInstance;
-    mockChangeBorderRadius = spyOn(component, 'changeBorderRadius');
-  });
 
-  it('should add pega-chat-center class and call changeBorderRadius when payload type matches', () => {
-    // Capture the FDC3 listener callback
-    let listenerCallback: any;
-    mockFdc3Client.addIntentListener.and.callFake((intent, cb) => {
-      listenerCallback = cb;
-    });
+import { Injectable } from '@angular/core';
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpEventType
+} from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
 
-    // Run the code that registers the listener
-    component.ngOnInit?.();
+@Injectable()
+export class DetailedLoggingInterceptor implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    console.log(`[REQUEST START] ${req.method} ${req.urlWithParams}`);
 
-    // Mock DOM structure with nested shadowRoots
-    const chatIconEl = document.createElement('div');
-    chatIconEl.classList.add('pega-chat-icon');
+    const started = Date.now();
 
-    const shadowRoot2: any = { querySelector: () => chatIconEl };
-    const shadowRoot1: any = { shadowRoot: shadowRoot2 };
+    return next.handle(req).pipe(
+      tap({
+        next: (event: HttpEvent<any>) => {
+          switch (event.type) {
+            case HttpEventType.Sent:
+              console.log(`[REQUEST SENT to backend] ${req.method} ${req.urlWithParams}`);
+              break;
 
-    spyOn(document, 'getElementById').and.returnValue(shadowRoot1);
+            case HttpEventType.ResponseHeader:
+              console.log(`[RESPONSE STARTED] headers received for ${req.method} ${req.urlWithParams}`);
+              break;
 
-    // Trigger the listener callback with matching payload
-    listenerCallback({ type: 'FDC3_EPF_MENU_ACTION' });
+            case HttpEventType.DownloadProgress:
+              console.log(`[RESPONSE IN PROGRESS] ${req.method} ${req.urlWithParams}, received: ${event.loaded} bytes`);
+              break;
 
-    // Verify expectations
-    expect(chatIconEl.classList.contains('pega-chat-center')).toBeTrue();
-    expect(mockChangeBorderRadius).toHaveBeenCalled();
-  });
-});
+            case HttpEventType.UploadProgress:
+              console.log(`[REQUEST UPLOAD IN PROGRESS] ${req.method} ${req.urlWithParams}, sent: ${event.loaded} bytes`);
+              break;
+
+            case HttpEventType.Response:
+              const elapsed = Date.now() - started;
+              console.log(`[RESPONSE COMPLETE] ${req.method} ${req.urlWithParams} (${elapsed} ms)`, event.body);
+              break;
+          }
+        },
+        error: (error) => {
+          const elapsed = Date.now() - started;
+          console.error(`[RESPONSE ERROR] ${req.method} ${req.urlWithParams} (${elapsed} ms)`, error);
+        }
+      })
+    );
+  }
+}
