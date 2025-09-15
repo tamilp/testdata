@@ -7,18 +7,98 @@ import {
 } from '@angular/common/http';
 import { tap } from 'rxjs';
 
+function formatMs(v: number) {
+  return `${v.toFixed(3)} ms`;
+}
+
+function formatWallClock(msSinceEpoch: number) {
+  const d = new Date(msSinceEpoch);
+  return d.toISOString().split('T')[1].replace('Z', '');
+}
+
+/**
+ * Attempts to find the PerformanceResourceTiming entry that corresponds to `reqUrl`.
+ * First tries getEntriesByName, otherwise searches resource entries for the last matching name.
+ */
+function findResourceTimingEntry(reqUrl: string): PerformanceResourceTiming | undefined {
+  try {
+    // use a normalized string for comparison
+    const target = new URL(reqUrl, location.href).href;
+
+    // try direct name lookup (fast)
+    const byName = performance.getEntriesByName(target) as PerformanceResourceTiming[];
+    if (byName && byName.length) {
+      return byName[byName.length - 1];
+    }
+
+    // fallback: search resource entries (last matching one)
+    const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const e = entries[i];
+      if (!e.name) continue;
+      // match by exact href or contains (handles cases where getEntriesByName fails)
+      if (e.name === target || e.name.indexOf(target) !== -1 || target.indexOf(e.name) !== -1) {
+        return e;
+      }
+    }
+  } catch (err) {
+    // ignore URL parse errors
+  }
+  return undefined;
+}
+
+/**
+ * Logs Chrome DevTools-like timings for the given request URL.
+ * Uses a small delay because resource timing entries may appear slightly after response event.
+ */
+function logNetworkTimings(reqUrl: string) {
+  // small delay to give the browser time to add the resource timing entry
+  setTimeout(() => {
+    const entry = findResourceTimingEntry(reqUrl);
+
+    if (!entry) {
+      console.warn(`No PerformanceResourceTiming entry found for: ${reqUrl}`);
+      return;
+    }
+
+    // IMPORTANT fields:
+    // entry.startTime, entry.requestStart, entry.responseStart, entry.responseEnd
+    const start = entry.startTime;         // when resource fetch started (relative to navigation start)
+    const reqStart = entry.requestStart;   // immediately before the request was sent
+    const respStart = entry.responseStart; // TTFB (first byte)
+    const respEnd = entry.responseEnd;     // end of response download
+
+    // In some cross-origin responses Timing-Allow-Origin must be set to allow full detail.
+    // If not allowed, many fields may be 0 or equal.
+    const requestSent = Math.max(0, reqStart - start);
+    const waiting = Math.max(0, respStart - reqStart);
+    const download = Math.max(0, respEnd - respStart);
+    const total = Math.max(0, respEnd - start);
+
+    // Convert entry.startTime (relative to navigationStart) into wall-clock time:
+    // Date.now() - performance.now() gives navigationStart in ms epoch-ish base
+    const navigationStartEpoch = Date.now() - performance.now();
+    const absoluteStartEpoch = navigationStartEpoch + start;
+
+    console.log(`⏱ Network Timing for ${reqUrl}`);
+    console.log(`  Wall-clock start: ${formatWallClock(absoluteStartEpoch)} (startTime: ${start.toFixed(3)} ms)`);
+    console.log(`  Request sent:      ${formatMs(requestSent)}`);
+    console.log(`  Waiting (TTFB):    ${formatMs(waiting)}`);
+    console.log(`  Content download:  ${formatMs(download)}`);
+    console.log(`  Total:             ${formatMs(total)}`);
+    // also helpful raw numbers if you want
+    console.debug('  raw resource timing entry:', entry);
+  }, 50); // 50ms delay; increase slightly if you observe missing entries
+}
+
 export const detailedLoggingInterceptor: HttpInterceptorFn =
   (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
     const started = performance.now();
-
     const formatElapsed = () => `${(performance.now() - started).toFixed(3)} ms`;
-
     const formatWallClock = () => {
       const now = new Date();
-      return now.toISOString().split('T')[1].replace('Z', ''); 
-      // Gives "HH:mm:ss.SSS"
+      return now.toISOString().split('T')[1].replace('Z', '');
     };
-
     const logPrefix = () => `[${formatWallClock()} | +${formatElapsed()}]`;
 
     console.log(`${logPrefix()} [REQUEST START] ${req.method} ${req.urlWithParams}`);
@@ -45,11 +125,15 @@ export const detailedLoggingInterceptor: HttpInterceptorFn =
 
             case HttpEventType.Response:
               console.log(`${logPrefix()} [RESPONSE COMPLETE] ${req.method} ${req.urlWithParams}`, event.body);
+              // log devtools-style timings for this request
+              logNetworkTimings(req.urlWithParams);
               break;
           }
         },
         error: (error) => {
           console.error(`${logPrefix()} [RESPONSE ERROR] ${req.method} ${req.urlWithParams}`, error);
+          // try to log timings even on error (may still have partial entries)
+          logNetworkTimings(req.urlWithParams);
         }
       })
     );
