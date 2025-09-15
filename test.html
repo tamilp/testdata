@@ -4,6 +4,7 @@ function documentUpload(url: string, data?: any, httpOptions?: any): Promise<any
   const timestamp = () => new Date().toISOString();
   const elapsed = () => `${Date.now() - started} ms`;
 
+  // Request start
   console.log(`[${timestamp()} | +${elapsed()}] [FETCH REQUEST START] URL: ${url}`);
 
   return fetch(url, {
@@ -12,28 +13,27 @@ function documentUpload(url: string, data?: any, httpOptions?: any): Promise<any
     body: data
   })
     .then(async response => {
-      // ✅ Response headers are available → this is response start
+      // Response start
       console.log(`[${timestamp()} | +${elapsed()}] [FETCH RESPONSE START] URL: ${url} Status: ${response.status}`);
 
-      // Try to grab request end from PerformanceResourceTiming
+      // Request end (using Performance API for real upload duration)
       setTimeout(() => {
         const entry = performance.getEntriesByType("resource")
           .reverse()
           .find(e => (e as PerformanceResourceTiming).name.includes(url)) as PerformanceResourceTiming;
 
         if (entry) {
-          const navStart = Date.now() - performance.now();
-          const abs = (t: number) => new Date(navStart + t).toISOString();
-          console.log(`[${timestamp()}] [FETCH REQUEST END] URL: ${url} (timing from Performance API)`);
-          console.log(`    RequestStart: ${abs(entry.requestStart)}`);
-          console.log(`    ResponseStart: ${abs(entry.responseStart)}`);
+          const uploadTime = entry.responseStart - entry.requestStart; // ms
+          console.log(`[${timestamp()}] [FETCH REQUEST END] URL: ${url} Time: ${uploadTime.toFixed(2)} ms`);
         } else {
           console.warn(`[${timestamp()}] [FETCH REQUEST END] Could not determine exact timing for URL: ${url}`);
         }
       }, 60);
 
+      // Parse body
       const body = await response.json();
 
+      // Response end
       console.log(`[${timestamp()} | +${elapsed()}] [FETCH RESPONSE END] URL: ${url}`);
       return body;
     })
