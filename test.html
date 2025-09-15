@@ -1,36 +1,20 @@
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { LoggingInterceptor } from './logging.interceptor';
-
-@NgModule({
-  providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: LoggingInterceptor, multi: true }
-  ]
-})
-export class AppModule {}
-
-
-
-
-import { Injectable } from '@angular/core';
 import {
-  HttpInterceptor,
-  HttpRequest,
-  HttpHandler,
   HttpEvent,
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpHandlerFn,
   HttpEventType
 } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { tap } from 'rxjs';
 
-@Injectable()
-export class DetailedLoggingInterceptor implements HttpInterceptor {
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+export const detailedLoggingInterceptor: HttpInterceptorFn =
+  (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
     console.log(`[REQUEST START] ${req.method} ${req.urlWithParams}`);
-
     const started = Date.now();
 
-    return next.handle(req).pipe(
+    return next(req).pipe(
       tap({
-        next: (event: HttpEvent<any>) => {
+        next: (event: HttpEvent<unknown>) => {
           switch (event.type) {
             case HttpEventType.Sent:
               console.log(`[REQUEST SENT to backend] ${req.method} ${req.urlWithParams}`);
@@ -60,12 +44,4 @@ export class DetailedLoggingInterceptor implements HttpInterceptor {
         }
       })
     );
-  }
-}
-
-
-          providers: [
-    provideHttpClient(
-      withInterceptors([ (req, next) => new DetailedLoggingInterceptor().intercept(req, next) ])
-    )
-  ]
+  };
