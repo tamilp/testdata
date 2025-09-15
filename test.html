@@ -4,7 +4,6 @@ function documentUpload(url: string, data?: any, httpOptions?: any): Promise<any
   const timestamp = () => new Date().toISOString();
   const elapsed = () => `${Date.now() - started} ms`;
 
-  // Request start
   console.log(`[${timestamp()} | +${elapsed()}] [FETCH REQUEST START] URL: ${url}`);
 
   return fetch(url, {
@@ -12,18 +11,31 @@ function documentUpload(url: string, data?: any, httpOptions?: any): Promise<any
     headers,
     body: data
   })
-    .then(response => {
-      // Request end
-      console.log(`[${timestamp()} | +${elapsed()}] [FETCH REQUEST END] URL: ${url}`);
-
-      // Response start (status + headers available)
+    .then(async response => {
+      // ✅ Response headers are available → this is response start
       console.log(`[${timestamp()} | +${elapsed()}] [FETCH RESPONSE START] URL: ${url} Status: ${response.status}`);
 
-      return response.json().then(body => {
-        // Response end (body fully read)
-        console.log(`[${timestamp()} | +${elapsed()}] [FETCH RESPONSE END] URL: ${url}`);
-        return body;
-      });
+      // Try to grab request end from PerformanceResourceTiming
+      setTimeout(() => {
+        const entry = performance.getEntriesByType("resource")
+          .reverse()
+          .find(e => (e as PerformanceResourceTiming).name.includes(url)) as PerformanceResourceTiming;
+
+        if (entry) {
+          const navStart = Date.now() - performance.now();
+          const abs = (t: number) => new Date(navStart + t).toISOString();
+          console.log(`[${timestamp()}] [FETCH REQUEST END] URL: ${url} (timing from Performance API)`);
+          console.log(`    RequestStart: ${abs(entry.requestStart)}`);
+          console.log(`    ResponseStart: ${abs(entry.responseStart)}`);
+        } else {
+          console.warn(`[${timestamp()}] [FETCH REQUEST END] Could not determine exact timing for URL: ${url}`);
+        }
+      }, 60);
+
+      const body = await response.json();
+
+      console.log(`[${timestamp()} | +${elapsed()}] [FETCH RESPONSE END] URL: ${url}`);
+      return body;
     })
     .catch(error => {
       console.error(`[${timestamp()} | +${elapsed()}] [FETCH REQUEST END WITH ERROR] URL: ${url}`, error);
