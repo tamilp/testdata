@@ -1,62 +1,45 @@
-// generate-pdf.component.ts
-import { Component, ElementRef, ViewChild } from '@angular/core';
+// pdf-with-font.component.ts
+import { Component } from '@angular/core';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 @Component({
-  selector: 'app-generate-pdf',
+  selector: 'app-pdf-with-font',
   template: `
-    <div #printSection class="print-area">
-      <!-- put content that may contain Chinese, images, styles -->
-      <h1>你好，世界！</h1>
-      <p>Some long content ...</p>
-    </div>
-
-    <button (click)="downloadPdf()">Download PDF (image)</button>
-  `,
-  styles: [`.print-area { width: 800px; padding: 16px; }`]
+    <button (click)="generatePdf()">Download PDF (embedded font)</button>
+  `
 })
-export class GeneratePdfComponent {
-  @ViewChild('printSection', { static: false }) printSection!: ElementRef;
+export class PdfWithFontComponent {
 
-  async downloadPdf() {
-    const element = this.printSection.nativeElement as HTMLElement;
+  async generatePdf() {
+    // 1) load font from assets and convert to base64
+    const fontUrl = 'assets/fonts/NotoSansSC-Regular.ttf';
+    const base64 = await this.loadFontAsBase64(fontUrl);
 
-    // Wait for fonts to load (important for correct Chinese rendering)
-    try { await (document as any).fonts?.ready; } catch (e) { /* ignore */ }
+    // 2) register font with jsPDF
+    // addFileToVFS and addFont are available on jsPDF.API
+    (jsPDF as any).API.addFileToVFS('NotoSansSC-Regular.ttf', base64);
+    (jsPDF as any).API.addFont('NotoSansSC-Regular.ttf', 'NotoSansSC', 'normal');
 
-    const canvas = await html2canvas(element, {
-      scale: 2,            // higher scale => higher-res image
-      useCORS: true,
-      allowTaint: false,
-      logging: false
-    });
+    // 3) create pdf, set font and write Chinese text
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    doc.setFont('NotoSansSC', 'normal'); // use registered font
+    doc.setFontSize(16);
 
-    const imgData = canvas.toDataURL('image/png');
+    const text = '你好，世界！ — Selectable and searchable text in the PDF.';
+    doc.text(text, 20, 30);
+    doc.save('document-with-font.pdf');
+  }
 
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    const imgProps = (pdf as any).getImageProperties(imgData);
-    const imgWidthMm = pdfWidth;
-    const imgHeightMm = (imgProps.height * imgWidthMm) / imgProps.width;
-
-    let heightLeft = imgHeightMm;
-    let position = 0;
-
-    // Add first page
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidthMm, imgHeightMm);
-    heightLeft -= pdfHeight;
-
-    // Add remaining pages
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeightMm;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidthMm, imgHeightMm);
-      heightLeft -= pdfHeight;
+  private async loadFontAsBase64(url: string): Promise<string> {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    let binary = '';
+    const bytes = new Uint8Array(arrayBuffer);
+    const chunkSize = 0x8000; // avoid stack overflow on very large fonts
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
     }
-
-    pdf.save('document-image.pdf');
+    return btoa(binary);
   }
 }
