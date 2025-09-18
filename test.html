@@ -1,45 +1,30 @@
-// pdf-with-font.component.ts
-import { Component } from '@angular/core';
-import jsPDF from 'jspdf';
+Hi Raj,
 
-@Component({
-  selector: 'app-pdf-with-font',
-  template: `
-    <button (click)="generatePdf()">Download PDF (embedded font)</button>
-  `
-})
-export class PdfWithFontComponent {
+I would like to bring to your attention certain concerns regarding the work environment and professional conduct within the Testos team under Lead Manoj. These issues have been affecting not only the motivation of team members but also their overall well-being.
 
-  async generatePdf() {
-    // 1) load font from assets and convert to base64
-    const fontUrl = 'assets/fonts/NotoSansSC-Regular.ttf';
-    const base64 = await this.loadFontAsBase64(fontUrl);
+Key points observed:
 
-    // 2) register font with jsPDF
-    // addFileToVFS and addFont are available on jsPDF.API
-    (jsPDF as any).API.addFileToVFS('NotoSansSC-Regular.ttf', base64);
-    (jsPDF as any).API.addFont('NotoSansSC-Regular.ttf', 'NotoSansSC', 'normal');
+Team members are being scolded in front of others during calls, which creates a negative atmosphere.
 
-    // 3) create pdf, set font and write Chinese text
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    doc.setFont('NotoSansSC', 'normal'); // use registered font
-    doc.setFontSize(16);
+Discussions in calls often lack professionalism, leading to frustration among the team.
 
-    const text = '你好，世界！ — Selectable and searchable text in the PDF.';
-    doc.text(text, 20, 30);
-    doc.save('document-with-font.pdf');
-  }
+This behavior is demotivating several members, including Manogar, who is also facing health-related stress due to the situation.
 
-  private async loadFontAsBase64(url: string): Promise<string> {
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    let binary = '';
-    const bytes = new Uint8Array(arrayBuffer);
-    const chunkSize = 0x8000; // avoid stack overflow on very large fonts
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, i + chunkSize);
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    return btoa(binary);
-  }
-}
+Multiple team members I have spoken to have expressed similar feelings and concerns.
+
+Such an environment reduces productivity and discourages open communication.
+
+The lack of respectful interactions is impacting team morale and collaboration.
+
+Professional concerns should ideally be addressed one-on-one, instead of being escalated in group calls.
+
+Constructive feedback and appreciation are missing, which is critical for maintaining motivation.
+
+If not addressed, this could lead to higher attrition and disengagement within the team.
+
+A positive and professional culture will help improve both performance and team satisfaction.
+
+I kindly request your guidance and support in addressing this matter so that we can restore a healthy, motivating, and professional work environment.
+
+Thanks & Regards,
+[Your Name]
