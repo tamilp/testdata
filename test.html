@@ -1,92 +1,42 @@
-{
-  "name": "branch-sorter",
-  "version": "1.0.0",
-  "description": "Node script to sort JSON array of branch objects by a given key",
-  "main": "sort-branches.mjs",
-  "type": "module",
-  "scripts": {
-    "start": "node sort-branches.mjs",
-    "sort": "node sort-branches.mjs"
-  },
-  "keywords": [
-    "sort",
-    "json",
-    "node",
-    "branches",
-    "localeCompare"
-  ],
-  "author": "",
-  "license": "MIT"
-}
+function sortBranches<T>(
+  arr: T[],
+  sortBy: keyof T,
+  order: 'asc' | 'desc' = 'asc',
+  locale = 'en'
+): T[] {
+  const normalizedLocale = locale.replace(/_/g, '-');
+  const othersRegex = /^others?\b/i; // Matches "Other" or "Others" at start
 
-
-
-
-// sort-branches.mjs
-import { readFile, writeFile } from 'fs/promises';
-import { fileURLToPath } from 'url';
-import path from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-async function tryLoadRaw(filePath) {
-  const raw = await readFile(filePath, 'utf8');
-  // Try JSON.parse first
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    // crude fallback: convert simple single-quoted JS object notation to JSON
-    // NOTE: this is a best-effort and not robust for complex files.
-    const fallback = raw
-      .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:\s*'([^']*)'/g, '"$2":"$4"') // key: 'value'
-      .replace(/'/g, '"'); // remaining single quotes -> double quotes
-    return JSON.parse(fallback);
-  }
-}
-
-/**
- * Generic-like sort function (works with JS objects)
- * @param {Array} arr
- * @param {string} locale
- * @param {'asc'|'desc'} order
- * @param {string} sortBy
- * @returns {Array}
- */
-function sortByLabel(arr, locale = 'en', order = 'asc', sortBy) {
-  return arr.sort((a, b) => {
+  return [...arr].sort((a, b) => {
     const aValue = a[sortBy];
     const bValue = b[sortBy];
-    if (aValue == null || bValue == null) return 0; // skip null/undefined
 
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return 1;
+    if (bValue == null) return -1;
+
+    // Check if a or b starts with "Other"/"Others"
+    const aIsOther = typeof aValue === 'string' && othersRegex.test(aValue);
+    const bIsOther = typeof bValue === 'string' && othersRegex.test(bValue);
+
+    // Always push "Other"/"Others" to the end
+    if (aIsOther && !bIsOther) return 1;
+    if (!aIsOther && bIsOther) return -1;
+    if (aIsOther && bIsOther) {
+      // Optional: sort "Other" items among themselves
+      return aValue.localeCompare(bValue, normalizedLocale, { sensitivity: 'base' });
+    }
+
+    // Regular sorting
     if (typeof aValue === 'string' && typeof bValue === 'string') {
-      const result = aValue.localeCompare(bValue, locale, { sensitivity: 'base' });
+      const result = aValue.localeCompare(bValue, normalizedLocale, { sensitivity: 'base' });
       return order === 'asc' ? result : -result;
     }
 
     // Numeric or other type comparison
     if (aValue < bValue) return order === 'asc' ? -1 : 1;
     if (aValue > bValue) return order === 'asc' ? 1 : -1;
+
     return 0;
   });
 }
-
-async function main() {
-  const inputFile = path.join(__dirname, 'branches.json'); // change if needed
-  const outputFile = path.join(__dirname, 'branches.sorted.json');
-
-  try {
-    const arr = await tryLoadRaw(inputFile);
-    if (!Array.isArray(arr)) throw new Error('Input file does not contain a JSON array');
-
-    // Example: sort by branchName ascending (locale 'en')
-    const sorted = sortByLabel(arr, 'en', 'asc', 'branchName');
-
-    await writeFile(outputFile, JSON.stringify(sorted, null, 2), 'utf8');
-    console.log(`Sorted ${arr.length} items; written to ${outputFile}`);
-  } catch (err) {
-    console.error('Error:', err.message);
-  }
-}
-
-main();
