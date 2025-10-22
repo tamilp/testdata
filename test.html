@@ -1,42 +1,50 @@
-function sortBranches<T>(
-  arr: T[],
-  sortBy: keyof T,
-  order: 'asc' | 'desc' = 'asc',
-  locale = 'en'
-): T[] {
-  const normalizedLocale = locale.replace(/_/g, '-');
-  const othersRegex = /^others?\b/i; // Matches "Other" or "Others" at start
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MyApp</title>
+  <base href="/">
+  <script>
+    const nonceValue = Math.random().toString(36).substring(2);
+    window['cspNonce'] = nonceValue;
+        // 2️⃣ Build the full CSP string dynamically
+    const csp = `
+      frame-ancestors 'self' *.citidirect.com;
+      default-src https://geolocation.onetrust.com 'self' *.citibank.com blob: filesystem: *.cacidirect.com *.chat.pega.digital *.cipbanfico.com https://cdn.walkme.com *.qualtrics.com mediabstream: about: *.citidirect.kz wss: *.citi-its-uat.gbqofs.io *.citivelocity.kz *.walkme.com *.walkmeusercontemt.com *.citi.com mailto *.citivelocity.com *.citigroup.com ws: data:;
+      script-src 'self' blob: https://chat.portaluat.citidirect.com *.chat.pega.digital *.qualtrics.com 'nonce-${nonceValue}';
+      object-src 'self';
+      style-src 'unsafe-inline' 'self' https:;
+      frame-src *.medallia.com *.citigroup.net 'self' *.citi.com *.citidirect.com *.nsroot.net *.citivelocity.com *.bindid-sandbox.io *.qualtrics.com *.citigroup.com;
+      font-src https://fonts.gstatic.com 'self' https://at.alicdn.com *.chat.pega.digital;
+    `;
 
-  return [...arr].sort((a, b) => {
-    const aValue = a[sortBy];
-    const bValue = b[sortBy];
+    // 3️⃣ Create and append the meta tag dynamically
+    const meta = document.createElement('meta');
+    meta.httpEquiv = 'Content-Security-Policy';
+    meta.content = csp.replace(/\s+/g, ' ').trim();
+    document.head.appendChild(meta);
 
-    if (aValue == null && bValue == null) return 0;
-    if (aValue == null) return 1;
-    if (bValue == null) return -1;
-
-    // Check if a or b starts with "Other"/"Others"
-    const aIsOther = typeof aValue === 'string' && othersRegex.test(aValue);
-    const bIsOther = typeof bValue === 'string' && othersRegex.test(bValue);
-
-    // Always push "Other"/"Others" to the end
-    if (aIsOther && !bIsOther) return 1;
-    if (!aIsOther && bIsOther) return -1;
-    if (aIsOther && bIsOther) {
-      // Optional: sort "Other" items among themselves
-      return aValue.localeCompare(bValue, normalizedLocale, { sensitivity: 'base' });
-    }
-
-    // Regular sorting
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      const result = aValue.localeCompare(bValue, normalizedLocale, { sensitivity: 'base' });
-      return order === 'asc' ? result : -result;
-    }
-
-    // Numeric or other type comparison
-    if (aValue < bValue) return order === 'asc' ? -1 : 1;
-    if (aValue > bValue) return order === 'asc' ? 1 : -1;
-
-    return 0;
-  });
-}
+    // const s = document.createElement('script');
+    // s.id = 'pega-wm-chat';
+    // s.className = 'tet'
+    // s.async = true;
+    // s.nonce = nonceValue;
+    // s.src = 'https://widget.use1.chat.pega.digital/99150cd4-f0bf-4e41-8d94-0f1f686f484d/widget.js';
+    // document.head.appendChild(s);
+  </script>
+  <!-- <meta http-equiv="Content-Security-Policy" content="
+    frame-ancestors 'self' *.citidirect.com;
+    default-src https://geolocation.onetrust.com 'self' *.citibank.com blob: filesystem: *.cacidirect.com *.chat.pega.digital *.cipbanfico.com https://cdn.walkme.com *.qualtrics.com mediabstream: about: *.citidirect.kz wss: *.citi-its-uat.gbqofs.io *.citivelocity.kz *.walkme.com *.walkmeusercontemt.com *.citi.com mailto *.citivelocity.com *.citigroup.com ws: data:;
+    script-src 'self' blob: https://chat.portaluat.citidirect.com *.chat.pega.digital *.qualtrics.com 'nonce-${nonceValue}';
+    object-src 'self';
+    style-src 'unsafe-inline' 'self' https:;
+    frame-src *.medallia.com *.citigroup.net 'self' *.citi.com *.citidirect.com *.nsroot.net *.citivelocity.com *.bindid-sandbox.io *.qualtrics.com *.citigroup.com;
+    font-src https://fonts.gstatic.com 'self' https://at.alicdn.com *.chat.pega.digital;"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+  <!-- <script id="pega-wm-chat" nonce='{{nonceValue}}' type="text/javascript" async src="https://widget.use1.chat.pega.digital/99150cd4-f0bf-4e41-8d94-0f1f686f484d/widget.js"></script> -->
+</body>
+</html>
