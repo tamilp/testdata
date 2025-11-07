@@ -1,50 +1,14 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>MyApp</title>
-  <base href="/">
-  <script>
-    const nonceValue = Math.random().toString(36).substring(2);
-    window['cspNonce'] = nonceValue;
-        // 2️⃣ Build the full CSP string dynamically
-    const csp = `
-      frame-ancestors 'self' *.citidirect.com;
-      default-src https://geolocation.onetrust.com 'self' *.citibank.com blob: filesystem: *.cacidirect.com *.chat.pega.digital *.cipbanfico.com https://cdn.walkme.com *.qualtrics.com mediabstream: about: *.citidirect.kz wss: *.citi-its-uat.gbqofs.io *.citivelocity.kz *.walkme.com *.walkmeusercontemt.com *.citi.com mailto *.citivelocity.com *.citigroup.com ws: data:;
-      script-src 'self' blob: https://chat.portaluat.citidirect.com *.chat.pega.digital *.qualtrics.com 'nonce-${nonceValue}';
-      object-src 'self';
-      style-src 'unsafe-inline' 'self' https:;
-      frame-src *.medallia.com *.citigroup.net 'self' *.citi.com *.citidirect.com *.nsroot.net *.citivelocity.com *.bindid-sandbox.io *.qualtrics.com *.citigroup.com;
-      font-src https://fonts.gstatic.com 'self' https://at.alicdn.com *.chat.pega.digital;
-    `;
+Upcoming Paternity Leave in December
 
-    // 3️⃣ Create and append the meta tag dynamically
-    const meta = document.createElement('meta');
-    meta.httpEquiv = 'Content-Security-Policy';
-    meta.content = csp.replace(/\s+/g, ' ').trim();
-    document.head.appendChild(meta);
+Hi [Scrum Master’s Name] / [Manager’s Name],
 
-    // const s = document.createElement('script');
-    // s.id = 'pega-wm-chat';
-    // s.className = 'tet'
-    // s.async = true;
-    // s.nonce = nonceValue;
-    // s.src = 'https://widget.use1.chat.pega.digital/99150cd4-f0bf-4e41-8d94-0f1f686f484d/widget.js';
-    // document.head.appendChild(s);
-  </script>
-  <!-- <meta http-equiv="Content-Security-Policy" content="
-    frame-ancestors 'self' *.citidirect.com;
-    default-src https://geolocation.onetrust.com 'self' *.citibank.com blob: filesystem: *.cacidirect.com *.chat.pega.digital *.cipbanfico.com https://cdn.walkme.com *.qualtrics.com mediabstream: about: *.citidirect.kz wss: *.citi-its-uat.gbqofs.io *.citivelocity.kz *.walkme.com *.walkmeusercontemt.com *.citi.com mailto *.citivelocity.com *.citigroup.com ws: data:;
-    script-src 'self' blob: https://chat.portaluat.citidirect.com *.chat.pega.digital *.qualtrics.com 'nonce-${nonceValue}';
-    object-src 'self';
-    style-src 'unsafe-inline' 'self' https:;
-    frame-src *.medallia.com *.citigroup.net 'self' *.citi.com *.citidirect.com *.nsroot.net *.citivelocity.com *.bindid-sandbox.io *.qualtrics.com *.citigroup.com;
-    font-src https://fonts.gstatic.com 'self' https://at.alicdn.com *.chat.pega.digital;"> -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-  <app-root></app-root>
-  <!-- <script id="pega-wm-chat" nonce='{{nonceValue}}' type="text/javascript" async src="https://widget.use1.chat.pega.digital/99150cd4-f0bf-4e41-8d94-0f1f686f484d/widget.js"></script> -->
-</body>
-</html>
+I wanted to inform you in advance that I’m planning to take my paternity leave in December, tentatively between December 15th and December 26th. The exact dates will be finalized once the delivery date is confirmed, and I’ll keep you updated accordingly.
+
+Before my leave, I’ll ensure all my current tasks, user stories, and deliverables are completed or properly handed over to the team. I’ll also document any pending work and share necessary details to ensure a smooth transition and minimal impact on the sprint.
+
+Please let me know if you’d like me to initiate any formal process or update this in the leave tracker/calendar.
+
+Thanks for your understanding and support.
+
+Best regards,
+Tamilselvam
