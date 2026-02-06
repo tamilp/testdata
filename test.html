@@ -1,29 +1,26 @@
-import json
-import math
+const fs = require("fs");
 
-def split_json_file(input_file, num_files, base_filename="output"):
-    # Read input JSON
-    with open(input_file, "r") as f:
-        data = json.load(f)
+function splitJson(inputFile, numFiles) {
+  const raw = fs.readFileSync(inputFile, "utf-8");
+  const data = JSON.parse(raw);
 
-    if not isinstance(data, list):
-        raise ValueError("JSON root must be a list")
+  if (!Array.isArray(data)) {
+    console.error("JSON root must be an array");
+    return;
+  }
 
-    total_items = len(data)
-    chunk_size = math.ceil(total_items / num_files)
+  const chunkSize = Math.ceil(data.length / numFiles);
 
-    # Split and write
-    for i in range(num_files):
-        start = i * chunk_size
-        end = start + chunk_size
-        chunk = data[start:end]
+  for (let i = 0; i < numFiles; i++) {
+    const chunk = data.slice(i * chunkSize, (i + 1) * chunkSize);
 
-        if chunk:  # skip empty chunks
-            filename = f"{base_filename}_{i+1}.json"
-            with open(filename, "w") as f:
-                json.dump(chunk, f, indent=2)
+    if (chunk.length > 0) {
+      const fileName = `output_${i + 1}.json`;
+      fs.writeFileSync(fileName, JSON.stringify(chunk, null, 2));
+      console.log(`Created ${fileName} with ${chunk.length} records`);
+    }
+  }
+}
 
-            print(f"Created {filename} with {len(chunk)} records")
-
-# ===== RUN =====
-split_json_file("input.json", 3)
+// ===== RUN =====
+splitJson("input.json", 3);
