@@ -1,26 +1,51 @@
 const fs = require("fs");
+const { chain } = require("stream-chain");
+const { parser } = require("stream-json");
+const { streamArray } = require("stream-json/streamers/StreamArray");
 
-function splitJson(inputFile, numFiles) {
-  const raw = fs.readFileSync(inputFile, "utf-8");
-  const data = JSON.parse(raw);
+const INPUT_FILE = "input.json";
+const NUM_FILES = 3;
 
-  if (!Array.isArray(data)) {
-    console.error("JSON root must be an array");
-    return;
-  }
+let totalCount = 0;
+let buffers = Array.from({ length: NUM_FILES }, () => []);
 
-  const chunkSize = Math.ceil(data.length / numFiles);
+// First pass → count items
+const countPipeline = chain([
+  fs.createReadStream(INPUT_FILE),
+  parser(),
+  streamArray()
+]);
 
-  for (let i = 0; i < numFiles; i++) {
-    const chunk = data.slice(i * chunkSize, (i + 1) * chunkSize);
+countPipeline.on("data", () => totalCount++);
+countPipeline.on("end", () => {
+  const perFile = Math.ceil(totalCount / NUM_FILES);
 
-    if (chunk.length > 0) {
-      const fileName = `output_${i + 1}.json`;
-      fs.writeFileSync(fileName, JSON.stringify(chunk, null, 2));
-      console.log(`Created ${fileName} with ${chunk.length} records`);
-    }
-  }
-}
+  console.log("Total records:", totalCount);
+  console.log("Records per file:", perFile);
 
-// ===== RUN =====
-splitJson("input.json", 3);
+  let index = 0;
+
+  const splitPipeline = chain([
+    fs.createReadStream(INPUT_FILE),
+    parser(),
+    streamArray()
+  ]);
+
+  splitPipeline.on("data", ({ value }) => {
+    const fileIndex = Math.floor(index / perFile);
+    buffers[fileIndex].push(value);
+    index++;
+  });
+
+  splitPipeline.on("end", () => {
+    buffers.forEach((data, i) => {
+      fs.writeFileSync(
+        `output_${i + 1}.json`,
+        JSON.stringify(data, null, 2)
+      );
+      console.log(`Created output_${i + 1}.json`);
+    });
+
+    console.log("✅ Split complete");
+  });
+});
