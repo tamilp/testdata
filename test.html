@@ -1,9 +1,29 @@
-Hi All,
+import json
+import math
 
-I would like to inform you that I’m planning to take my paternity leave in December, tentatively between December 15th and December 26th. The exact dates will be confirmed closer to the time based on the situation, and I’ll keep you updated accordingly.
+def split_json_file(input_file, num_files, base_filename="output"):
+    # Read input JSON
+    with open(input_file, "r") as f:
+        data = json.load(f)
 
-Before my leave, I’ll make sure all my ongoing tasks, deliverables, and responsibilities are completed or properly handed over to the respective team members. I’ll also document and share any required details to ensure a smooth workflow during my absence.
+    if not isinstance(data, list):
+        raise ValueError("JSON root must be a list")
 
-Please let me know if any additional steps are required from my end for the leave approval or planning.
+    total_items = len(data)
+    chunk_size = math.ceil(total_items / num_files)
 
-Thanks for your understanding and support.
+    # Split and write
+    for i in range(num_files):
+        start = i * chunk_size
+        end = start + chunk_size
+        chunk = data[start:end]
+
+        if chunk:  # skip empty chunks
+            filename = f"{base_filename}_{i+1}.json"
+            with open(filename, "w") as f:
+                json.dump(chunk, f, indent=2)
+
+            print(f"Created {filename} with {len(chunk)} records")
+
+# ===== RUN =====
+split_json_file("input.json", 3)
