@@ -6,17 +6,19 @@ const { streamArray } = require("stream-json/streamers/StreamArray");
 const INPUT = "input.json";
 const NUM_FILES = 4;
 
+// writers + counters
 const writers = [];
 const counts = Array(NUM_FILES).fill(0);
+let totalRecords = 0;
 
-// create output streams
+// create output files
 for (let i = 0; i < NUM_FILES; i++) {
-  const stream = fs.createWriteStream(`output_${i + 1}.json`);
+  const stream = fs.createWriteStream(`out${i + 1}.json`);
   stream.write("[\n");
   writers.push(stream);
 }
 
-let index = 0;
+console.log("🚀 Starting split...");
 
 const pipeline = chain([
   fs.createReadStream(INPUT),
@@ -25,7 +27,7 @@ const pipeline = chain([
 ]);
 
 pipeline.on("data", ({ value }) => {
-  const fileIndex = index % NUM_FILES; // round-robin distribution
+  const fileIndex = totalRecords % NUM_FILES; // round-robin
 
   const writer = writers[fileIndex];
 
@@ -34,12 +36,18 @@ pipeline.on("data", ({ value }) => {
   writer.write(JSON.stringify(value));
 
   counts[fileIndex]++;
-  index++;
+  totalRecords++;
 });
 
 pipeline.on("end", () => {
   writers.forEach(w => w.write("\n]"));
   writers.forEach(w => w.end());
 
-  console.log("✅ Split complete without memory crash");
+  console.log("\n✅ Split completed!");
+  console.log("Total records processed:", totalRecords);
+
+  console.log("\n📦 Records per file:");
+  counts.forEach((count, i) => {
+    console.log(`out${i + 1}.json → ${count}`);
+  });
 });
