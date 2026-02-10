@@ -1,11 +1,18 @@
 const fs = require("fs");
+const path = require("path");
 const { chain } = require("stream-chain");
 const { parser } = require("stream-json");
 const { streamArray } = require("stream-json/streamers/StreamArray");
 
 const INPUT = "input.json";
+const OUTPUT_DIR = "mongo_output"; // 👉 folder name
 const RECORDS_PER_FILE = 1000;
 const COLLECTION = "myDB";
+
+// create folder if not exists
+if (!fs.existsSync(OUTPUT_DIR)) {
+  fs.mkdirSync(OUTPUT_DIR);
+}
 
 let totalRecords = 0;
 let fileIndex = 1;
@@ -17,7 +24,8 @@ let writer = createNewFile(fileIndex);
 console.log("🚀 Generating Mongo insert JS files...");
 
 function createNewFile(index) {
-  const stream = fs.createWriteStream(`out${index}.js`);
+  const filePath = path.join(OUTPUT_DIR, `out${index}.js`);
+  const stream = fs.createWriteStream(filePath);
 
   stream.write(`async function insertDocument(db) {\n\n`);
 
@@ -72,4 +80,5 @@ pipeline.on("end", () => {
 
   console.log("\n🎉 Completed!");
   console.log("Total records processed:", totalRecords);
+  console.log(`📂 Files saved in folder: ${OUTPUT_DIR}`);
 });
