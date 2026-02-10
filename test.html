@@ -5,11 +5,11 @@ const { parser } = require("stream-json");
 const { streamArray } = require("stream-json/streamers/StreamArray");
 
 const INPUT = "input.json";
-const OUTPUT_DIR = "mongo_output"; // 👉 folder name
+const OUTPUT_DIR = "mongo_output";
 const RECORDS_PER_FILE = 1000;
 const COLLECTION = "myDB";
 
-// create folder if not exists
+// create folder if missing
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR);
 }
@@ -27,7 +27,9 @@ function createNewFile(index) {
   const filePath = path.join(OUTPUT_DIR, `out${index}.js`);
   const stream = fs.createWriteStream(filePath);
 
+  // header
   stream.write(`async function insertDocument(db) {\n\n`);
+  stream.write(`await db.collection('${COLLECTION}').deleteMany({});\n\n`);
 
   recordInFile = 0;
   fileTotal = 0;
@@ -69,7 +71,6 @@ pipeline.on("data", ({ value }) => {
 
   if (recordInFile === RECORDS_PER_FILE) {
     closeFile();
-
     fileIndex++;
     writer = createNewFile(fileIndex);
   }
