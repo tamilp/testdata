@@ -4,21 +4,37 @@ const { parser } = require("stream-json");
 const { streamArray } = require("stream-json/streamers/StreamArray");
 
 const INPUT = "input.json";
-const NUM_FILES = 4;
+const RECORDS_PER_FILE = 1000;
+const COLLECTION = "myDB";
 
-// writers + counters
-const writers = [];
-const counts = Array(NUM_FILES).fill(0);
 let totalRecords = 0;
+let fileIndex = 1;
+let recordInFile = 0;
+let fileTotal = 0;
 
-// create output files
-for (let i = 0; i < NUM_FILES; i++) {
-  const stream = fs.createWriteStream(`out${i + 1}.json`);
-  stream.write("[\n");
-  writers.push(stream);
+let writer = createNewFile(fileIndex);
+
+console.log("🚀 Generating Mongo insert JS files...");
+
+function createNewFile(index) {
+  const stream = fs.createWriteStream(`out${index}.js`);
+
+  stream.write(`async function insertDocument(db) {\n\n`);
+
+  recordInFile = 0;
+  fileTotal = 0;
+
+  return stream;
 }
 
-console.log("🚀 Starting split...");
+function closeFile() {
+  writer.write(`\n}\n\nmodule.exports = insertDocument;\n`);
+  writer.end();
+
+  console.log(
+    `✅ out${fileIndex}.js → inserted ${fileTotal} records`
+  );
+}
 
 const pipeline = chain([
   fs.createReadStream(INPUT),
@@ -27,27 +43,33 @@ const pipeline = chain([
 ]);
 
 pipeline.on("data", ({ value }) => {
-  const fileIndex = totalRecords % NUM_FILES; // round-robin
+  const json = JSON.stringify(value, null, 2);
 
-  const writer = writers[fileIndex];
+  if (recordInFile === RECORDS_PER_FILE - 1) {
+    writer.write(
+      `return await db.collection('${COLLECTION}').insertOne(${json});\n`
+    );
+  } else {
+    writer.write(
+      `await db.collection('${COLLECTION}').insertOne(${json});\n\n`
+    );
+  }
 
-  if (counts[fileIndex] > 0) writer.write(",\n");
-
-  writer.write(JSON.stringify(value));
-
-  counts[fileIndex]++;
+  recordInFile++;
+  fileTotal++;
   totalRecords++;
+
+  if (recordInFile === RECORDS_PER_FILE) {
+    closeFile();
+
+    fileIndex++;
+    writer = createNewFile(fileIndex);
+  }
 });
 
 pipeline.on("end", () => {
-  writers.forEach(w => w.write("\n]"));
-  writers.forEach(w => w.end());
+  if (recordInFile > 0) closeFile();
 
-  console.log("\n✅ Split completed!");
+  console.log("\n🎉 Completed!");
   console.log("Total records processed:", totalRecords);
-
-  console.log("\n📦 Records per file:");
-  counts.forEach((count, i) => {
-    console.log(`out${i + 1}.json → ${count}`);
-  });
 });
