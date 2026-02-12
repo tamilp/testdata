@@ -1,85 +1,11 @@
-const fs = require("fs");
-const path = require("path");
-const { chain } = require("stream-chain");
-const { parser } = require("stream-json");
-const { streamArray } = require("stream-json/streamers/StreamArray");
+Hi Rathana — good morning! ABC and XYZ shared your contact number.
 
-const INPUT = "input.json";
-const OUTPUT_DIR = "mongo_output";
-const RECORDS_PER_FILE = 1000;
-const COLLECTION = "myDB";
+We’re currently working on the XYZ application and performing data migration from Global to IN. Our current approach is to collect all IN branch codes (including 999) from Global and insert those records into IN.
 
-// create folder if missing
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR);
-}
+However, we’re running into file size limitations. Previously, the pipeline executed successfully when we split the data into multiple files of around 10 MB each (total ~50 MB). But now our dataset is much larger — about 950 MB — and when we tried processing files over 100 MB, we encountered OOM (Out Of Memory) errors.
 
-let totalRecords = 0;
-let fileIndex = 1;
-let recordInFile = 0;
-let fileTotal = 0;
+For the PTE environment we are experimenting, but for production the data size is expected to be around 2.5 GB, so we want to ensure we choose the right migration strategy.
 
-let writer = createNewFile(fileIndex);
+Could you please advise on the best approach or recommended strategy for handling large-volume data migration in this scenario?
 
-console.log("🚀 Generating Mongo insert JS files...");
-
-function createNewFile(index) {
-  const filePath = path.join(OUTPUT_DIR, `out${index}.js`);
-  const stream = fs.createWriteStream(filePath);
-
-  // header
-  stream.write(`async function insertDocument(db) {\n\n`);
-  stream.write(`await db.collection('${COLLECTION}').deleteMany({});\n\n`);
-
-  recordInFile = 0;
-  fileTotal = 0;
-
-  return stream;
-}
-
-function closeFile() {
-  writer.write(`\n}\n\nmodule.exports = insertDocument;\n`);
-  writer.end();
-
-  console.log(
-    `✅ out${fileIndex}.js → inserted ${fileTotal} records`
-  );
-}
-
-const pipeline = chain([
-  fs.createReadStream(INPUT),
-  parser(),
-  streamArray()
-]);
-
-pipeline.on("data", ({ value }) => {
-  const json = JSON.stringify(value, null, 2);
-
-  if (recordInFile === RECORDS_PER_FILE - 1) {
-    writer.write(
-      `return await db.collection('${COLLECTION}').insertOne(${json});\n`
-    );
-  } else {
-    writer.write(
-      `await db.collection('${COLLECTION}').insertOne(${json});\n\n`
-    );
-  }
-
-  recordInFile++;
-  fileTotal++;
-  totalRecords++;
-
-  if (recordInFile === RECORDS_PER_FILE) {
-    closeFile();
-    fileIndex++;
-    writer = createNewFile(fileIndex);
-  }
-});
-
-pipeline.on("end", () => {
-  if (recordInFile > 0) closeFile();
-
-  console.log("\n🎉 Completed!");
-  console.log("Total records processed:", totalRecords);
-  console.log(`📂 Files saved in folder: ${OUTPUT_DIR}`);
-});
+Thanks in advance for your guidance.
